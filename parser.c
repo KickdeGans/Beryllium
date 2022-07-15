@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "scope.h"
+#include "exception.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -23,11 +24,7 @@ void parser_eat(parser_T* parser, int token_type)
     }
     else
     {
-        printf(
-            "unexpected token `%s`, with type %d",
-            parser -> current_token -> value,
-            parser -> current_token -> type
-        );
+        printf("unexpected token '%s'", parser -> current_token -> value);
         exit(1);
     }
 }
@@ -131,7 +128,6 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
     variable_definition -> scope = scope;
     return variable_definition;
 }
-
 AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
 {
     AST_T* ast = init_ast(AST_FUNCTION_DEFINITION);
@@ -158,6 +154,26 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
     parser_eat(parser, TOKEN_RPAREN);
     parser_eat(parser, TOKEN_LBRACE);
     ast -> function_definition_body = parser_parse_statements(parser, scope);
+    parser_eat(parser, TOKEN_RBRACE);
+    ast -> scope = scope;
+    return ast;
+}
+AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
+{
+    AST_T* ast = init_ast(AST_STATEMENT_DEFINITION);
+    parser_eat(parser, TOKEN_ID);
+    char* type = parser -> current_token -> value;
+    ast -> statement_definition_type = calloc(
+            strlen(type) + 1, sizeof(char)
+    );
+    strcpy(ast -> statement_definition_type, type);
+    parser_eat(parser, TOKEN_LPAREN);
+    ast -> statement_definition_args = calloc(1, sizeof(struct AST_STRUCT*));
+    ast -> statement_definition_args[0].string_value = parser -> current_token -> value;
+    parser_eat(parser, TOKEN_ID);
+    parser_eat(parser, TOKEN_RPAREN);
+    parser_eat(parser, TOKEN_LBRACE);
+    ast -> statement_definition_body = parser_parse_statements(parser, scope);
     parser_eat(parser, TOKEN_RBRACE);
     ast -> scope = scope;
     return ast;
@@ -196,10 +212,13 @@ AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
     {
         return parser_parse_variable_definition(parser, scope);
     }
-    else
-    if (strcmp(parser -> current_token -> value, "define") == 0)
+    else if (strcmp(parser -> current_token -> value, "define") == 0)
     {
         return parser_parse_function_definition(parser, scope);
+    }
+    else if (strcmp(parser -> current_token -> value, "if") == 0)
+    {
+        return parser_parse_statement_definition(parser, scope);
     }
     else
     {

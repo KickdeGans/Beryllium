@@ -39,6 +39,7 @@ AST_T* visitor_visit(visitor_T* visitor, AST_T* node)
     {
         case AST_VARIABLE_DEFINITION: return visitor_visit_variable_definition(visitor, node); break;
         case AST_FUNCTION_DEFINITION: return visitor_visit_function_definition(visitor, node); break;
+        case AST_STATEMENT_DEFINITION: return visitor_visit_statement_definition(visitor, node); break;
         case AST_VARIABLE: return visitor_visit_variable(visitor, node); break;
         case AST_FUNCTION_CALL: return visitor_visit_function_call(visitor, node); break;
         case AST_STRING: return visitor_visit_string(visitor, node); break;
@@ -84,6 +85,18 @@ AST_T* visitor_visit_variable(visitor_T* visitor, AST_T* node)
 
     printf("undefined variable `%s`\n", node -> variable_name);
     exit(1);
+}
+
+AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
+{
+    if (node -> statement_definition_type == "if")
+    {
+        if (node -> statement_definition_args -> string_value == "true")
+        {
+            return visitor_visit_compound(visitor, node -> statement_definition_body);
+        }
+    }
+    return init_ast(AST_NOOP);
 }
 
 AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
