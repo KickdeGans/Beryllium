@@ -1,5 +1,6 @@
 #include "visitor.h"
 #include "scope.h"
+#include "exception.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -89,11 +90,16 @@ AST_T* visitor_visit_variable(visitor_T* visitor, AST_T* node)
 
 AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
 {
-    if (node -> statement_definition_type == "if")
+    if (strcmp(node -> statement_definition_type, "if") == 1)
     {
-        if (node -> statement_definition_args -> string_value == "true")
+        printf("%s %s", node -> statement_definition_type, node -> statement_definition_args[0].string_value);
+        if (node -> statement_definition_args[0].string_value == "true")
         {
             return visitor_visit_compound(visitor, node -> statement_definition_body);
+        }
+        else
+        {
+            return visitor_visit(visitor, node);
         }
     }
     return init_ast(AST_NOOP);

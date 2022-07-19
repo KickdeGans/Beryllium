@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "scope.h"
 #include "exception.h"
+#include "name_verifier.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -119,6 +120,11 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
 {
     parser_eat(parser, TOKEN_ID);
     char* variable_definition_variable_name = parser -> current_token -> value;
+    if (name_verifier_is_valid_var_name(variable_definition_variable_name) == 0)
+    {
+        printf("invalid variable name '%s'\n", variable_definition_variable_name);
+        exit(1);
+    }
     parser_eat(parser, TOKEN_ID);
     parser_eat(parser, TOKEN_EQUALS);
     AST_T* variable_definition_value = parser_parse_expr(parser, scope);
@@ -161,11 +167,11 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
 AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
 {
     AST_T* ast = init_ast(AST_STATEMENT_DEFINITION);
-    parser_eat(parser, TOKEN_ID);
     char* type = parser -> current_token -> value;
     ast -> statement_definition_type = calloc(
             strlen(type) + 1, sizeof(char)
     );
+    parser_eat(parser, TOKEN_ID);
     strcpy(ast -> statement_definition_type, type);
     parser_eat(parser, TOKEN_LPAREN);
     ast -> statement_definition_args = calloc(1, sizeof(struct AST_STRUCT*));
@@ -175,7 +181,6 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
     parser_eat(parser, TOKEN_LBRACE);
     ast -> statement_definition_body = parser_parse_statements(parser, scope);
     parser_eat(parser, TOKEN_RBRACE);
-    ast -> scope = scope;
     return ast;
 }
 

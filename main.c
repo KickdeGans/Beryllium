@@ -15,6 +15,5 @@ int main(int argc, char* argv[])
     AST_T* root = parser_parse(parser, parser->scope);
     visitor_T* visitor = init_visitor();
     visitor_visit(visitor, root);
-    throw_exception("test");
     return 0;
 }
