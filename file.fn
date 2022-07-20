@@ -1,5 +1,5 @@
 if (true)
 {
-    printfn("statement");
+    printfn("statement ran");
 }
 printfn("done");
