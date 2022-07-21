@@ -1,5 +1,1 @@
-if (true)
-{
-    printfn("statement ran");
-}
-printfn("done");
+define show();

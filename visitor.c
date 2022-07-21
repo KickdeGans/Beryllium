@@ -90,15 +90,13 @@ AST_T* visitor_visit_variable(visitor_T* visitor, AST_T* node)
 
 AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
 {
-    if (strcmp(node -> statement_definition_type, "if") == 1)
+    printf("visit statement ");
+    if (strcmp(node -> statement_definition_type, "if") == 0)
     {
-        if (strcmp(node -> statement_definition_args[0].string_value, "true") == 1)
+        printf("if statement");
+        if (strcmp(node -> statement_definition_args[0].string_value, "true") == 0)
         {
-            return visitor_visit_compound(visitor, node -> statement_definition_body);
-        }
-        else
-        {
-            return visitor_visit(visitor, node);
+            return visitor_visit(visitor, node -> statement_definition_body);
         }
     }
     return init_ast(AST_NOOP);
@@ -148,14 +146,9 @@ AST_T* visitor_visit_string(visitor_T* visitor, AST_T* node)
 
 AST_T* visitor_visit_compound(visitor_T* visitor, AST_T* node)
 {
-    AST_T* noop = init_ast(AST_NOOP);
     for (int i = 0; i < node -> compound_size; i++)
     {
-        AST_T* v = visitor_visit(visitor, node -> compound_value[i]);
-        if (v != noop)
-        {
-            return v;
-        }
+        visitor_visit(visitor, node -> compound_value[i]);
     }
 
     return init_ast(AST_NOOP);
