@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 
-char* get_file_contents(const char* filepath)
+char* io_file_read(const char* filepath)
 {
     char* buffer = 0;
     long length;
@@ -25,6 +25,19 @@ char* get_file_contents(const char* filepath)
         return buffer;
     }
 
-    printf("Error reading file %s\n", filepath);
+    printf("error reading file <%s>\n", filepath);
     exit(2);
+}
+
+void io_file_create(const char* filepath)
+{
+    FILE* f = fopen(filepath, "w");
+    fclose(f);
+    return;
+}
+
+void io_file_delete(const char* filepath)
+{
+    remove(filepath);
+    return;
 }

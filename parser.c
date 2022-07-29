@@ -146,16 +146,19 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
     parser_eat(parser, TOKEN_ID);
     parser_eat(parser, TOKEN_LPAREN);
     ast -> function_definition_args = calloc(1, sizeof(struct AST_STRUCT*));
-    AST_T* arg = parser_parse_variable(parser, scope);
-    ast -> function_definition_args_size += 1;
-    ast -> function_definition_args[ast -> function_definition_args_size-1] = arg;
-    while (parser -> current_token -> type == TOKEN_COMMA)
+    if (parser -> current_token == TOKEN_ID)
     {
-        parser_eat(parser, TOKEN_COMMA);
-        ast -> function_definition_args_size += 1;
-        ast -> function_definition_args = realloc(ast -> function_definition_args, ast -> function_definition_args_size * sizeof(struct AST_STRUCT*));
         AST_T* arg = parser_parse_variable(parser, scope);
+        ast -> function_definition_args_size += 1;
         ast -> function_definition_args[ast -> function_definition_args_size-1] = arg;
+        while (parser -> current_token -> type == TOKEN_COMMA)
+        {
+            parser_eat(parser, TOKEN_COMMA);
+            ast -> function_definition_args_size += 1;
+            ast -> function_definition_args = realloc(ast -> function_definition_args, ast -> function_definition_args_size * sizeof(struct AST_STRUCT*));
+            AST_T* arg = parser_parse_variable(parser, scope);
+            ast -> function_definition_args[ast -> function_definition_args_size-1] = arg;
+        }
     }
     parser_eat(parser, TOKEN_RPAREN);
     parser_eat(parser, TOKEN_LBRACE);

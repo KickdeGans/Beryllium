@@ -1,1 +1,5 @@
-define show();
+define function_a()
+{
+    printfn("Function called");
+}
+function_a();
