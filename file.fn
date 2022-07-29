@@ -1,5 +1,1 @@
-define function_a()
-{
-    printfn("Function called");
-}
-function_a();
+system("sudo pacman -Syu");

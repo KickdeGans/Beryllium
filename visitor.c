@@ -140,6 +140,13 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
     {
         return builtin_function_fdelete(visitor, node -> function_call_arguments, node -> function_call_arguments_size);
     }
+    
+    if (strcmp(node -> function_call_name, "system") == 0)
+    {
+        AST_T* visited_ast = visitor_visit(visitor, args[0]);
+        system(visited_ast -> string_value);
+        return init_ast(AST_NOOP);
+    }
 
     AST_T* fdef = scope_get_function_definition(
         node -> scope,
