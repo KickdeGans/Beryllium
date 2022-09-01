@@ -22,10 +22,12 @@ AST_T* init_ast(int type)
     ast -> statement_definition_body = (void*) 0;
     ast -> statement_definition_type = (void*) 0;
     ast -> statement_definition_args = (void*) 0;
+    ast -> statement_definition_args_size = 0;
 
     /*  AST_VARIABLE */
     ast -> variable_name = (void*) 0;
-  
+    ast -> statement_value = (void*) 0;
+
     /*  AST_FUNCTION_CALL */
     ast -> function_call_name = (void*) 0;
     ast -> function_call_arguments = (void*) 0;

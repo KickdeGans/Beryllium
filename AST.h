@@ -30,10 +30,12 @@ typedef struct AST_STRUCT
     /* AST_STATEMENT_DEFINITION */
     struct AST_STRUCT* statement_definition_body;
     char* statement_definition_type;
-    struct AST_STRUCT* statement_definition_args;
+    struct AST_STRUCT** statement_definition_args;
+    size_t statement_definition_args_size;
 
     /* AST_VARIABLE */
     char* variable_name;
+    char* statement_value;
 
     /* AST_FUNCTION_CALL */
     char* function_call_name;

@@ -95,13 +95,18 @@ AST_T* visitor_visit_variable(visitor_T* visitor, AST_T* node)
 
 AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
 {
-    printf("visit statement ");
     if (strcmp(node -> statement_definition_type, "if") == 0)
     {
-        printf("if statement");
-        if (strcmp(node -> statement_definition_args[0].string_value, "true") == 0)
+        if (strcmp(node -> statement_definition_args[0] -> variable_name, "true") == 0)
         {
-            return visitor_visit(visitor, node -> statement_definition_body);
+            visitor_visit(visitor, node -> statement_definition_body);
+        }
+    }
+    else if (strcmp(node -> statement_definition_type, "while") == 0)
+    {
+        while (strcmp(node -> statement_definition_args[0] -> variable_name, "true") == 0)
+        {
+            visitor_visit(visitor, node -> statement_definition_body);
         }
     }
     return init_ast(AST_NOOP);
@@ -148,12 +153,26 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
         return init_ast(AST_NOOP);
     }
 
+    if (strcmp(node -> function_call_name, "return") == 0)
+    {
+        AST_T* visited_ast = visitor_visit(visitor, args[0]);
+        return visited_ast -> string_value;
+    }
+
+    if (strcmp(node -> function_call_name, "input") == 0)
+    {
+        AST_T* ast = init_ast(AST_STRING);
+        AST_T* arg = visitor_visit(visitor, args[0]);
+        scanf(ast -> string_value, "%s", ast->string_value);
+        return ast;
+    }
+
     AST_T* fdef = scope_get_function_definition(
         node -> scope,
         node -> function_call_name
     );
 
-    if (fdef == (void*)0);
+    if (fdef == (void*)0)
     {
         printf("undefined method `%s`\n", node -> function_call_name);
         exit(1);
@@ -184,7 +203,12 @@ AST_T* visitor_visit_compound(visitor_T* visitor, AST_T* node)
 {
     for (int i = 0; i < node -> compound_size; i++)
     {
-        visitor_visit(visitor, node -> compound_value[i]);
+        AST_T* v = visitor_visit(visitor, node -> compound_value[i]);
+        if (v -> type == AST_STRING)
+        {
+            printf("return variable in compound");
+            return v;
+        }
     }
 
     return init_ast(AST_NOOP);

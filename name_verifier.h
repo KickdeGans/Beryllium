@@ -4,6 +4,7 @@
 #include <string.h>
 #include "AST.h"
 
-int name_verifier_is_valid_var_name(char* name);
+int name_verifier_is_valid_name(char* name);
+int name_verifier_is_allowed_char(char ch);
 
 #endif

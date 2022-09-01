@@ -120,7 +120,7 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
 {
     parser_eat(parser, TOKEN_ID);
     char* variable_definition_variable_name = parser -> current_token -> value;
-    if (name_verifier_is_valid_var_name(variable_definition_variable_name) == 0)
+    if (name_verifier_is_valid_name(variable_definition_variable_name) == 0)
     {
         printf("invalid variable name '%s'\n", variable_definition_variable_name);
         exit(1);
@@ -143,6 +143,11 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
             strlen(function_name) + 1, sizeof(char)
     );
     strcpy(ast -> function_definition_name, function_name);
+    if (name_verifier_is_valid_name(function_name) == 0)
+    {
+        printf("invalid function name '%s'\n", function_name);
+        exit(1);
+    }
     parser_eat(parser, TOKEN_ID);
     parser_eat(parser, TOKEN_LPAREN);
     ast -> function_definition_args = calloc(1, sizeof(struct AST_STRUCT*));
@@ -164,6 +169,7 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
     parser_eat(parser, TOKEN_LBRACE);
     ast -> function_definition_body = parser_parse_statements(parser, scope);
     parser_eat(parser, TOKEN_RBRACE);
+    parser_eat(parser, TOKEN_SEMI);
     ast -> scope = scope;
     return ast;
 }
@@ -177,13 +183,27 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
     parser_eat(parser, TOKEN_ID);
     strcpy(ast -> statement_definition_type, type);
     parser_eat(parser, TOKEN_LPAREN);
+    if (parser -> current_token -> type != TOKEN_ID)
+    {
+        printf("invalid or no arguments given");
+        exit(1);
+    }
     ast -> statement_definition_args = calloc(1, sizeof(struct AST_STRUCT*));
-    ast -> statement_definition_args[0].string_value = parser -> current_token -> value;
-    parser_eat(parser, TOKEN_ID);
+    AST_T* arg = parser_parse_variable(parser, scope);
+    ast -> statement_definition_args_size += 1;
+    ast -> statement_definition_args[ast -> statement_definition_args_size-1] = arg;
+    while (parser -> current_token -> type == TOKEN_COMMA)
+    {
+        ast -> statement_definition_args_size += 1;
+        ast -> statement_definition_args = realloc(ast -> statement_definition_args, ast -> statement_definition_args_size * sizeof(struct AST_STRUCT*));
+        AST_T* arg = parser_parse_variable(parser, scope);
+        ast -> statement_definition_args[ast -> statement_definition_args_size-1] = arg;
+    }
     parser_eat(parser, TOKEN_RPAREN);
     parser_eat(parser, TOKEN_LBRACE);
     ast -> statement_definition_body = parser_parse_statements(parser, scope);
     parser_eat(parser, TOKEN_RBRACE);
+    parser_eat(parser, TOKEN_SEMI);
     return ast;
 }
 
@@ -216,7 +236,7 @@ AST_T* parser_parse_string(parser_T* parser, scope_T* scope)
 
 AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
 {
-    if (strcmp(parser -> current_token -> value, "let") == 0)
+    if (strcmp(parser -> current_token -> value, "var") == 0)
     {
         return parser_parse_variable_definition(parser, scope);
     }
@@ -224,7 +244,11 @@ AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
     {
         return parser_parse_function_definition(parser, scope);
     }
-    else if (strcmp(parser -> current_token -> value, "if") == 0)
+    else if (strcmp(parser -> current_token -> value, "if") == 0 ||
+        strcmp(parser -> current_token -> value, "else") == 0 ||
+        strcmp(parser -> current_token -> value, "elseif") == 0 ||
+        strcmp(parser -> current_token -> value, "while") == 0 ||
+        strcmp(parser -> current_token -> value, "for") == 0)
     {
         return parser_parse_statement_definition(parser, scope);
     }

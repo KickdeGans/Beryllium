@@ -13,6 +13,7 @@ typedef struct TOKEN_STRUCT
         TOKEN_RBRACE,
         TOKEN_LBRACE,
         TOKEN_COMMA,
+        TOKEN_DOT,
         TOKEN_EOF,
         TOKEN_EQUALTO,
         TOKEN_NOTEQUALTO,

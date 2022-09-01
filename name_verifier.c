@@ -9,7 +9,7 @@ char allowed_chars[] =
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_', '.'
 };
 
-int name_verifier_is_valid_var_name(char* name)
+int name_verifier_is_valid_name(char* name)
 {
     if (digits_only(name))
     {
@@ -25,12 +25,21 @@ int name_verifier_is_valid_var_name(char* name)
                 valid = 1;
             }
         }
-        if (valid == 0)
+    }
+    return valid;
+}
+int name_verifier_is_allowed_char(char ch)
+{
+    int valid = 1;
+    for (int i = 0; i < sizeof(allowed_chars); i++)
+    {
+        valid = 0;
+        if (ch == allowed_chars[i])
         {
-            return 0;
+            valid = 1;
         }
     }
-    return 1;
+    return valid;
 }
 int digits_only(const char *s)
 {

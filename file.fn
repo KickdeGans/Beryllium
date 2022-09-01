@@ -1,1 +1,1 @@
-system("sudo pacman -Syu");
+input("Enter your name: ");

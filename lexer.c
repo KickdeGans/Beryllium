@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "name_verifier.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -32,6 +33,14 @@ void lexer_skip_whitespace(lexer_T* lexer)
     }
 }
 
+void lexer_handle_comment(lexer_T* lexer)
+{
+    while (lexer -> c != '`' || lexer -> c != 96)
+    {
+        lexer_advance(lexer);
+    }
+}
+
 token_T* lexer_get_next_token(lexer_T* lexer)
 {
     while (lexer -> c != '\0' && lexer -> i < strlen(lexer -> contents))
@@ -39,6 +48,10 @@ token_T* lexer_get_next_token(lexer_T* lexer)
         if (lexer -> c == ' ' || lexer -> c == 10)
         {
             lexer_skip_whitespace(lexer);
+        }
+        if (lexer -> c == '`')
+        {
+            lexer_handle_comment(lexer);
         }
         if (isalnum(lexer -> c))
         {
@@ -57,6 +70,7 @@ token_T* lexer_get_next_token(lexer_T* lexer)
             case '{': return lexer_advance_with_token(lexer, init_token(TOKEN_LBRACE, lexer_get_current_char_as_string(lexer))); break;
             case '}': return lexer_advance_with_token(lexer, init_token(TOKEN_RBRACE, lexer_get_current_char_as_string(lexer))); break;
             case ',': return lexer_advance_with_token(lexer, init_token(TOKEN_COMMA, lexer_get_current_char_as_string(lexer))); break;
+            case '.': return lexer_advance_with_token(lexer, init_token(TOKEN_DOT, lexer_get_current_char_as_string(lexer))); break;
         }
     }
     return init_token(TOKEN_EOF, "\0");
@@ -91,6 +105,12 @@ token_T* lexer_collect_id(lexer_T* lexer)
         strcat(value, s);
 
         lexer_advance(lexer);
+    }
+
+    if (name_verifier_is_valid_name(value) == 0)
+    {
+        printf("invalid identifier name '%s'\n", value);
+        exit(1);
     }
 
     return init_token(TOKEN_ID, value);
