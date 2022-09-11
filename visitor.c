@@ -136,12 +136,12 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
         exit((int) visited_ast -> string_value);
     }
 
-    if (strcmp(node -> function_call_name, "fcreate") == 0)
+    if (strcmp(node -> function_call_name, "file.create") == 0)
     {
         return builtin_function_fcreate(visitor, node -> function_call_arguments, node -> function_call_arguments_size);
     }
     
-    if (strcmp(node -> function_call_name, "fdelete") == 0)
+    if (strcmp(node -> function_call_name, "file.delete") == 0)
     {
         return builtin_function_fdelete(visitor, node -> function_call_arguments, node -> function_call_arguments_size);
     }
@@ -162,8 +162,16 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
     if (strcmp(node -> function_call_name, "input") == 0)
     {
         AST_T* ast = init_ast(AST_STRING);
-        AST_T* arg = visitor_visit(visitor, args[0]);
-        scanf(ast -> string_value, "%s", ast->string_value);
+        for (int i = 0; i < args_size; i++)
+        {
+            AST_T* visited_ast = visitor_visit(visitor, args[i]);
+            switch (visited_ast -> type)
+            {
+                case AST_STRING: printf(visited_ast -> string_value); break;
+                default: printf(visited_ast -> string_value); break;
+            }
+        }
+        scanf("%s", ast->string_value);
         return ast;
     }
 

@@ -12,6 +12,8 @@ typedef struct TOKEN_STRUCT
         TOKEN_RPAREN,
         TOKEN_RBRACE,
         TOKEN_LBRACE,
+        TOKEN_LBRACKET,
+        TOKEN_RBRACKET,
         TOKEN_COMMA,
         TOKEN_DOT,
         TOKEN_EOF,
@@ -20,7 +22,10 @@ typedef struct TOKEN_STRUCT
         TOKEN_GREATERTHAN,
         TOKEN_LESSTHAN,
         TOKEN_EGREATERTHAN,
-        TOKEN_ELESSTHAN
+        TOKEN_ELESSTHAN,
+        TOKEN_EXCLAMATION,
+        TOKEN_QUESTION,
+        TOKEN_LAMBDA
     } type;
 
     char* value;

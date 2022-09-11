@@ -6,5 +6,6 @@
 
 int name_verifier_is_valid_name(char* name);
 int name_verifier_is_allowed_char(char ch);
+int digits_only(const char *s);
 
 #endif
