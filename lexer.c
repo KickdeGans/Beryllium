@@ -9,27 +9,27 @@
 lexer_T* init_lexer(char* contents)
 {
     lexer_T* lexer = calloc(1, sizeof(struct LEXER_STRUCT));
-    lexer -> contents = contents;
-    lexer -> i = 0;
-    lexer -> prev_c = lexer->c;
-    lexer -> c = contents[lexer -> i];
+    lexer->contents = contents;
+    lexer->i = 0;
+    lexer->prev_c = lexer->c;
+    lexer->c = contents[lexer->i];
 
     return lexer;
 }
 
 void lexer_advance(lexer_T* lexer)
 {
-    if (lexer -> c != '\0' && lexer -> i < strlen(lexer -> contents))
+    if (lexer->c != '\0' && lexer->i < strlen(lexer->contents))
     {
-        lexer -> i += 1;
-        lexer -> prev_c = lexer -> c;
-        lexer -> c = lexer -> contents[lexer -> i];
+        lexer->i += 1;
+        lexer->prev_c = lexer->c;
+        lexer->c = lexer->contents[lexer->i];
     }
 }
 
 void lexer_skip_whitespace(lexer_T* lexer)
 {
-    while (lexer -> c == ' ' || lexer -> c == 10)
+    while (lexer->c == ' ' || lexer->c == 10)
     {
         lexer_advance(lexer);
     }
@@ -38,7 +38,7 @@ void lexer_skip_whitespace(lexer_T* lexer)
 void lexer_handle_comment(lexer_T* lexer)
 {
     lexer_advance(lexer);
-    while (lexer -> c != '#' || lexer -> c != 35)
+    while (lexer->c != '#' || lexer->c != 35)
     {
         lexer_advance(lexer);
     }
@@ -51,26 +51,26 @@ char lexer_next_token(lexer_T* lexer)
 
 token_T* lexer_get_next_token(lexer_T* lexer)
 {
-    while (lexer -> c != '\0' && lexer -> i < strlen(lexer -> contents))
+    while (lexer->c != '\0' && lexer->i < strlen(lexer->contents))
     {
-        if (lexer -> c == ' ' || lexer -> c == 10)
+        if (lexer->c == ' ' || lexer->c == 10)
         {
             lexer_skip_whitespace(lexer);
         }
-        if (lexer -> c == '#' || lexer -> c == 35)
+        if (lexer->c == '#' || lexer->c == 35)
         {
             lexer_handle_comment(lexer);
         }
-        if (isalnum(lexer -> c))
+        if (isalnum(lexer->c))
         {
             return lexer_collect_id(lexer);
         }
-        if (lexer -> c == '"')
+        if (lexer->c == '"')
         {
             return lexer_collect_string(lexer);
         }
         char next_token = lexer_next_token(lexer);
-        switch (lexer -> c)
+        switch (lexer->c)
         {
             case '=': 
                 switch (next_token)
@@ -117,7 +117,7 @@ token_T* lexer_collect_string(lexer_T* lexer)
     lexer_advance(lexer);
     char* value = calloc(1, sizeof(char));
     value[0] = '\0';
-    while (lexer -> c != '"')
+    while (lexer->c != '"')
     {
         char* s = lexer_get_current_char_as_string(lexer);
         value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
@@ -134,7 +134,7 @@ token_T* lexer_collect_id(lexer_T* lexer)
     char* value = calloc(1, sizeof(char));
     value[0] = '\0';
 
-    while (isalnum(lexer -> c))
+    while (isalnum(lexer->c))
     {
         char* s = lexer_get_current_char_as_string(lexer);
         value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
@@ -162,7 +162,7 @@ token_T* lexer_advance_with_token(lexer_T* lexer, token_T* token)
 char* lexer_get_current_char_as_string(lexer_T* lexer)
 {
     char* str = calloc(2, sizeof(char));
-    str[0] = lexer -> c;
+    str[0] = lexer->c;
     str[1] = '\0';
 
     return str;

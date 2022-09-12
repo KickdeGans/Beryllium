@@ -6,11 +6,11 @@ scope_T* init_scope()
 {
     scope_T* scope = calloc(1, sizeof(struct SCOPE_STRUCT));
 
-    scope -> function_definitions = (void*) 0;
-    scope -> function_definitions_size = 0;
+    scope->function_definitions = (void*) 0;
+    scope->function_definitions_size = 0;
 
-    scope -> variable_definitions = (void*) 0;
-    scope -> variable_definitions_size = 0;
+    scope->variable_definitions = (void*) 0;
+    scope->variable_definitions_size = 0;
 
     return scope;
 }
