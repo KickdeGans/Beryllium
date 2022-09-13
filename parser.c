@@ -25,8 +25,7 @@ void parser_eat(parser_T* parser, int token_type)
     }
     else
     {
-        printf("unexpected token '%s'", parser->current_token->value);
-        exit(1);
+        throw_exception("unexpected token", parser->current_token->value);
     }
 }
 
@@ -37,9 +36,9 @@ AST_T* parser_parse(parser_T* parser, scope_T* scope)
 
 AST_T* parser_parse_statement(parser_T* parser, scope_T* scope)
 {
-    switch (parser->current_token->type)
+    if (parser->current_token->type == TOKEN_ID)
     {
-        case TOKEN_ID: return parser_parse_id(parser, scope);
+        return parser_parse_id(parser, scope);
     }
     return init_ast(AST_NOOP);
 }
@@ -78,16 +77,9 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
     {
         case TOKEN_STRING: return parser_parse_string(parser, scope);
         case TOKEN_ID: return parser_parse_id(parser, scope);
+        case TOKEN_EQUALTO: return parser_parse_boolean(parser, scope);
     }
     return init_ast(AST_NOOP);
-}
-
-AST_T* parser_parse_factor(parser_T* parser, scope_T* scope)
-{
-}
-
-AST_T* parser_parse_term(parser_T* parser, scope_T* scope)
-{
 }
 
 AST_T* parser_parse_function_call(parser_T* parser, scope_T* scope)
@@ -123,8 +115,7 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
     char* variable_definition_variable_name = parser->current_token->value;
     if (name_verifier_is_valid_name(variable_definition_variable_name) == 0)
     {
-        printf("invalid variable name '%s'\n", variable_definition_variable_name);
-        exit(1);
+        throw_exception("invalid variable name", variable_definition_variable_name);
     }
     parser_eat(parser, TOKEN_ID);
     if (parser->current_token->type == TOKEN_SEMI)
@@ -153,8 +144,7 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
     strcpy(ast->function_definition_name, function_name);
     if (name_verifier_is_valid_name(function_name) == 0)
     {
-        printf("invalid function name '%s'\n", function_name);
-        exit(1);
+        throw_exception("invalid function name", function_name);
     }
     parser_eat(parser, TOKEN_ID);
     parser_eat(parser, TOKEN_LPAREN);
@@ -191,11 +181,6 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
     parser_eat(parser, TOKEN_ID);
     strcpy(ast->statement_definition_type, type);
     parser_eat(parser, TOKEN_LPAREN);
-    if (parser->current_token->type != TOKEN_ID)
-    {
-        printf("invalid or no arguments given");
-        exit(1);
-    }
     ast->statement_definition_args = calloc(1, sizeof(struct AST_STRUCT*));
     AST_T* arg = parser_parse_variable(parser, scope);
     ast->statement_definition_args_size += 1;
@@ -204,7 +189,7 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
     {
         ast->statement_definition_args_size += 1;
         ast->statement_definition_args = realloc(ast->statement_definition_args, ast->statement_definition_args_size * sizeof(struct AST_STRUCT*));
-        AST_T* arg = parser_parse_variable(parser, scope);
+        AST_T* arg = parser_parse_expr(parser, scope);
         ast->statement_definition_args[ast->statement_definition_args_size-1] = arg;
     }
     parser_eat(parser, TOKEN_RPAREN);
@@ -240,6 +225,20 @@ AST_T* parser_parse_string(parser_T* parser, scope_T* scope)
     ast_string->scope = scope;
 
     return ast_string;
+}
+
+AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope)
+{
+    AST_T* ast_boolean = init_ast(AST_BOOLEAN);
+    printf("%s", parser->current_token->value);
+    int boolean_type = 0;
+    switch (parser->current_token->type)
+    {
+        case TOKEN_EQUALTO: boolean_type = BOOLEAN_EQUALTO;
+        case TOKEN_NOTEQUALTO: boolean_type = BOOLEAN_NOTEQUALTO;
+    }
+    ast_boolean->scope = scope;
+    return init_ast(AST_NOOP);
 }
 
 AST_T* parser_parse_id(parser_T* parser, scope_T* scope)

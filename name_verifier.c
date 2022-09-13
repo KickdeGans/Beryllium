@@ -2,6 +2,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "AST.h"
+#include "name_verifier.h"
 
 char allowed_chars[] =
 {

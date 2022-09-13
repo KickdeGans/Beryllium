@@ -36,6 +36,11 @@ AST_T* init_ast(int type)
     /*  AST_STRING */
     ast->string_value = (void*) 0;
   
+    /* AST_BOOLEAN */
+    ast->boolean_variable_a = (void*) 0;
+    ast->boolean_variable_b = (void*) 0;
+    ast->boolean_type = 0;
+
     /*  AST_COMPOUND */
     ast->compound_value = (void*) 0;
     ast->compound_size = 0;

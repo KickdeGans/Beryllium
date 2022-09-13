@@ -11,9 +11,18 @@ typedef struct AST_STRUCT
         AST_VARIABLE,
         AST_FUNCTION_CALL,
         AST_STRING,
+        AST_BOOLEAN,
+        AST_FUNCTION_RETURN,
         AST_COMPOUND,
         AST_NOOP
     } type;
+
+    enum {
+        BOOLEAN_EQUALTO,
+        BOOLEAN_NOTEQUALTO,
+        BOOLEAN_GREATERTHAN,
+        BOOLEAN_LESSTHAN
+    } boolean_type;
 
     struct SCOPE_STRUCT* scope;
 
@@ -44,6 +53,12 @@ typedef struct AST_STRUCT
 
     /* AST_STRING */
     char* string_value;
+
+    /* AST_BOOLEAN */
+    struct AST_STRUCT* boolean_variable_a;
+    struct AST_STRUCT* boolean_variable_b;
+    int boolean_operator;
+
 
     /* AST_COMPOUND */
     struct AST_STRUCT** compound_value;

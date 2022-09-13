@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "name_verifier.h"
+#include "exception.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -145,8 +146,7 @@ token_T* lexer_collect_id(lexer_T* lexer)
 
     if (name_verifier_is_valid_name(value) == 0)
     {
-        printf("invalid identifier name '%s'\n", value);
-        exit(1);
+        throw_exception("invalid identifier name", value);
     }
 
     return init_token(TOKEN_ID, value);
