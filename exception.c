@@ -3,6 +3,6 @@
 #include "main.h"
 void throw_exception(char* msg, char* info)
 {
-    printf("stacktrace in file <%s>: \n  %s '%s'\n", file_path, msg, info);
+    printf("\nerror in file <%s>: \n  %s '%s'\n", file_path, msg, info);
     exit(1);
 }

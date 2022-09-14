@@ -78,6 +78,12 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
         case TOKEN_STRING: return parser_parse_string(parser, scope);
         case TOKEN_ID: return parser_parse_id(parser, scope);
         case TOKEN_EQUALTO: return parser_parse_boolean(parser, scope);
+        case TOKEN_NOTEQUALTO: return parser_parse_boolean(parser, scope);
+        case TOKEN_GREATERTHAN: return parser_parse_boolean(parser, scope);
+        case TOKEN_LESSTHAN: return parser_parse_boolean(parser, scope);
+        case TOKEN_EGREATERTHAN: return parser_parse_boolean(parser, scope);
+        case TOKEN_ELESSTHAN: return parser_parse_boolean(parser, scope);
+        default: throw_exception("unknown expression", parser->current_token->value);
     }
     return init_ast(AST_NOOP);
 }
@@ -176,13 +182,13 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
     AST_T* ast = init_ast(AST_STATEMENT_DEFINITION);
     char* type = parser->current_token->value;
     ast->statement_definition_type = calloc(
-            strlen(type) + 1, sizeof(char)
-    );
+            strlen(type) + 1, sizeof(char));
     parser_eat(parser, TOKEN_ID);
     strcpy(ast->statement_definition_type, type);
     parser_eat(parser, TOKEN_LPAREN);
+    parser_eat(parser, TOKEN_STRING);
     ast->statement_definition_args = calloc(1, sizeof(struct AST_STRUCT*));
-    AST_T* arg = parser_parse_variable(parser, scope);
+    AST_T* arg = parser_parse_expr(parser, scope);
     ast->statement_definition_args_size += 1;
     ast->statement_definition_args[ast->statement_definition_args_size-1] = arg;
     while (parser->current_token->type == TOKEN_COMMA)
@@ -230,15 +236,23 @@ AST_T* parser_parse_string(parser_T* parser, scope_T* scope)
 AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope)
 {
     AST_T* ast_boolean = init_ast(AST_BOOLEAN);
-    printf("%s", parser->current_token->value);
-    int boolean_type = 0;
+    ast_boolean->boolean_variable_a = init_ast(AST_BOOLEAN);
+    ast_boolean->boolean_variable_b = init_ast(AST_BOOLEAN);
+    ast_boolean->boolean_variable_a->string_value = parser->prev_token->value;
     switch (parser->current_token->type)
     {
-        case TOKEN_EQUALTO: boolean_type = BOOLEAN_EQUALTO;
-        case TOKEN_NOTEQUALTO: boolean_type = BOOLEAN_NOTEQUALTO;
+        case TOKEN_EQUALTO: ast_boolean->boolean_operator = BOOLEAN_EQUALTO; parser_eat(parser, TOKEN_EQUALTO); break;
+        case TOKEN_NOTEQUALTO: ast_boolean->boolean_operator = BOOLEAN_NOTEQUALTO; parser_eat(parser, TOKEN_NOTEQUALTO); break;
+        case TOKEN_GREATERTHAN: ast_boolean->boolean_operator = BOOLEAN_GREATERTHAN; parser_eat(parser, TOKEN_GREATERTHAN); break;
+        case TOKEN_LESSTHAN: ast_boolean->boolean_operator = BOOLEAN_LESSTHAN; parser_eat(parser, TOKEN_LESSTHAN); break;
+        case TOKEN_EGREATERTHAN: ast_boolean->boolean_operator = BOOLEAN_EGREATERTHAN; parser_eat(parser, TOKEN_EGREATERTHAN); break;
+        case TOKEN_ELESSTHAN: ast_boolean->boolean_operator = BOOLEAN_ELESSTHAN; parser_eat(parser, TOKEN_ELESSTHAN); break;
+        default: throw_exception("invalid boolean operator ", parser->current_token->value);
     }
+    parser_eat(parser, TOKEN_STRING);
+    ast_boolean->boolean_variable_b->string_value = parser->current_token->value;
     ast_boolean->scope = scope;
-    return init_ast(AST_NOOP);
+    return ast_boolean;
 }
 
 AST_T* parser_parse_id(parser_T* parser, scope_T* scope)

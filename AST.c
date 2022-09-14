@@ -40,6 +40,7 @@ AST_T* init_ast(int type)
     ast->boolean_variable_a = (void*) 0;
     ast->boolean_variable_b = (void*) 0;
     ast->boolean_type = 0;
+    ast->boolean_value = 0;
 
     /*  AST_COMPOUND */
     ast->compound_value = (void*) 0;

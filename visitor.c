@@ -71,14 +71,14 @@ AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
 {
     if (strcmp(node->statement_definition_type, "if") == 0)
     {
-        if (strcmp(node->statement_definition_args[0]->variable_name, "true") == 0)
+        if (visitor_visit_boolean(visitor, node)->boolean_value == 1)
         {
             visitor_visit(visitor, node->statement_definition_body);
         }
     }
     else if (strcmp(node->statement_definition_type, "while") == 0)
     {
-        while (strcmp(node->statement_definition_args[0]->variable_name, "true") == 0)
+        while (visitor_visit_boolean(visitor, node)->boolean_value == 1)
         {
             visitor_visit(visitor, node->statement_definition_body);
         }
@@ -134,9 +134,8 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
     if (strcmp(node->function_call_name, "return") == 0)
     {
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
-        AST_T* value = init_ast(AST_FUNCTION_RETURN);
-        value->string_value = visited_ast->string_value;
-        return value;
+        visited_ast->type = AST_FUNCTION_RETURN;
+        return visited_ast;
     }
 
     if (strcmp(node->function_call_name, "input") == 0)
@@ -183,6 +182,17 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
 
 AST_T* visitor_visit_string(visitor_T* visitor, AST_T* node)
 {
+    return node;
+}
+
+AST_T* visitor_visit_boolean(visitor_T* visitor, AST_T* node)
+{
+    switch (node->boolean_operator)
+    {
+        case BOOLEAN_EQUALTO: node->boolean_value = node->boolean_variable_a == node->boolean_variable_b; break;
+        case BOOLEAN_NOTEQUALTO: node->boolean_value = node->boolean_variable_a != node->boolean_variable_b; break;
+    }
+    printf("%d", node->boolean_value);
     return node;
 }
 

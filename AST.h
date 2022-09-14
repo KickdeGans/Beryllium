@@ -21,7 +21,9 @@ typedef struct AST_STRUCT
         BOOLEAN_EQUALTO,
         BOOLEAN_NOTEQUALTO,
         BOOLEAN_GREATERTHAN,
-        BOOLEAN_LESSTHAN
+        BOOLEAN_LESSTHAN,
+        BOOLEAN_EGREATERTHAN,
+        BOOLEAN_ELESSTHAN
     } boolean_type;
 
     struct SCOPE_STRUCT* scope;
@@ -58,7 +60,7 @@ typedef struct AST_STRUCT
     struct AST_STRUCT* boolean_variable_a;
     struct AST_STRUCT* boolean_variable_b;
     int boolean_operator;
-
+    int boolean_value;
 
     /* AST_COMPOUND */
     struct AST_STRUCT** compound_value;

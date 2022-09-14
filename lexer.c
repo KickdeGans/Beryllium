@@ -76,8 +76,8 @@ token_T* lexer_get_next_token(lexer_T* lexer)
             case '=': 
                 switch (next_token)
                 {
-                    case '=': return lexer_advance_with_token(lexer, init_token(TOKEN_EQUALTO, lexer_get_current_char_as_string(lexer))); 
-                    case '>': return lexer_advance_with_token(lexer, init_token(TOKEN_LAMBDA, lexer_get_current_char_as_string(lexer))); 
+                    case '=': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_EQUALTO, lexer_get_current_doubletok_as_string(lexer))); 
+                    case '>': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_LAMBDA, lexer_get_current_doubletok_as_string(lexer))); 
                 }
             return lexer_advance_with_token(lexer, init_token(TOKEN_EQUALS, lexer_get_current_char_as_string(lexer))); break;
             case ';': return lexer_advance_with_token(lexer, init_token(TOKEN_SEMI, lexer_get_current_char_as_string(lexer))); break;
@@ -92,22 +92,32 @@ token_T* lexer_get_next_token(lexer_T* lexer)
             case '>': 
                 switch (next_token)
                 {
-                    case '=': return lexer_advance_with_token(lexer, init_token(TOKEN_GREATERTHAN, lexer_get_current_char_as_string(lexer))); 
+                    case '=': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_GREATERTHAN, lexer_get_current_doubletok_as_string(lexer))); 
                 }
             return lexer_advance_with_token(lexer, init_token(TOKEN_GREATERTHAN, lexer_get_current_char_as_string(lexer))); break;
             case '<': 
                 switch (next_token)
                 {
-                    case '=': return lexer_advance_with_token(lexer, init_token(TOKEN_ELESSTHAN, lexer_get_current_char_as_string(lexer))); 
+                    case '=': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_ELESSTHAN, lexer_get_current_doubletok_as_string(lexer))); 
                 }
             return lexer_advance_with_token(lexer, init_token(TOKEN_LESSTHAN, lexer_get_current_char_as_string(lexer))); break;
             case '!': 
                 switch (next_token)
                 {
-                    case '=': return lexer_advance_with_token(lexer, init_token(TOKEN_NOTEQUALTO, lexer_get_current_char_as_string(lexer))); 
+                    case '=': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_NOTEQUALTO, lexer_get_current_doubletok_as_string(lexer))); 
                 }
             return lexer_advance_with_token(lexer, init_token(TOKEN_EXCLAMATION, lexer_get_current_char_as_string(lexer))); break;
             case '?': return lexer_advance_with_token(lexer, init_token(TOKEN_QUESTION, lexer_get_current_char_as_string(lexer))); break;
+            case '&':
+                switch (next_token)
+                {
+                    case '&': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_AND, lexer_get_current_doubletok_as_string(lexer))); 
+                }
+            case '|':
+                switch (next_token)
+                {
+                    case '|': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_OR, lexer_get_current_doubletok_as_string(lexer))); 
+                }
         }
     }
     return init_token(TOKEN_EOF, "\0");
@@ -159,11 +169,28 @@ token_T* lexer_advance_with_token(lexer_T* lexer, token_T* token)
     return token;
 }
 
+token_T* lexer_advance_with_doubletok(lexer_T* lexer, token_T* token)
+{
+    lexer_advance(lexer);
+    lexer_advance(lexer);
+
+    return token;
+}
+
 char* lexer_get_current_char_as_string(lexer_T* lexer)
 {
     char* str = calloc(2, sizeof(char));
     str[0] = lexer->c;
     str[1] = '\0';
+
+    return str;
+}
+
+char* lexer_get_current_doubletok_as_string(lexer_T* lexer)
+{
+    char* str = calloc(2, sizeof(char));
+    str[0] = lexer->c;
+    str[1] = lexer_next_token(lexer);
 
     return str;
 }

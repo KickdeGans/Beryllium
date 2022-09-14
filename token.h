@@ -25,7 +25,9 @@ typedef struct TOKEN_STRUCT
         TOKEN_ELESSTHAN,
         TOKEN_EXCLAMATION,
         TOKEN_QUESTION,
-        TOKEN_LAMBDA
+        TOKEN_LAMBDA,
+        TOKEN_AND,
+        TOKEN_OR
     } type;
 
     char* value;
