@@ -12,6 +12,7 @@ typedef struct AST_STRUCT
         AST_FUNCTION_CALL,
         AST_STRING,
         AST_BOOLEAN,
+        AST_FORLOOP,
         AST_FUNCTION_RETURN,
         AST_COMPOUND,
         AST_NOOP
@@ -61,6 +62,10 @@ typedef struct AST_STRUCT
     struct AST_STRUCT* boolean_variable_b;
     int boolean_operator;
     int boolean_value;
+
+    /* AST_FORLOOP */
+    char* forloop_variable_name;
+    struct AST_STRUCT** forloop_array;
 
     /* AST_COMPOUND */
     struct AST_STRUCT** compound_value;

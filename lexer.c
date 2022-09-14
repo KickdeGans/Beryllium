@@ -77,7 +77,7 @@ token_T* lexer_get_next_token(lexer_T* lexer)
                 switch (next_token)
                 {
                     case '=': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_EQUALTO, lexer_get_current_doubletok_as_string(lexer))); 
-                    case '>': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_LAMBDA, lexer_get_current_doubletok_as_string(lexer))); 
+                    case '>': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_ARRPTR, lexer_get_current_doubletok_as_string(lexer))); 
                 }
             return lexer_advance_with_token(lexer, init_token(TOKEN_EQUALS, lexer_get_current_char_as_string(lexer))); break;
             case ';': return lexer_advance_with_token(lexer, init_token(TOKEN_SEMI, lexer_get_current_char_as_string(lexer))); break;

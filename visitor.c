@@ -24,6 +24,7 @@ AST_T* visitor_visit(visitor_T* visitor, AST_T* node)
         case AST_VARIABLE: return visitor_visit_variable(visitor, node); break;
         case AST_FUNCTION_CALL: return visitor_visit_function_call(visitor, node); break;
         case AST_STRING: return visitor_visit_string(visitor, node); break;
+        case AST_BOOLEAN: return visitor_visit_boolean(visitor, node); break;
         case AST_FUNCTION_RETURN: return visitor_visit(visitor, node); break;
         case AST_COMPOUND: return visitor_visit_compound(visitor, node); break;
         case AST_NOOP: return node; break;
@@ -89,7 +90,7 @@ AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
 AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
 {
     AST_T** args = node->function_call_arguments;
-    int args_size = node->function_call_arguments_size;
+    size_t args_size = node->function_call_arguments_size;
     if (strcmp(node->function_call_name, "printfn") == 0)
     {
         for (int i = 0; i < args_size; i++)

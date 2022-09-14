@@ -1,4 +1,0 @@
-if ("hello" == "hello1")
-{
-    printfn("hello");
-};
