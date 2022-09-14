@@ -6,7 +6,7 @@
 char* io_file_read(const char* filepath)
 {
     char* buffer = 0;
-    long length;
+    size_t length;
 
     FILE* f = fopen(filepath, "rb");
 
