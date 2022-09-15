@@ -225,6 +225,7 @@ AST_T* parser_parse_variable(parser_T* parser, scope_T* scope)
 AST_T* parser_parse_string(parser_T* parser, scope_T* scope)
 {
     AST_T* ast_string = init_ast(AST_STRING);
+
     ast_string->string_value = parser->current_token->value;
 
     parser_eat(parser, TOKEN_STRING);
@@ -237,9 +238,9 @@ AST_T* parser_parse_string(parser_T* parser, scope_T* scope)
 AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope)
 {
     AST_T* ast_boolean = init_ast(AST_BOOLEAN);
-    ast_boolean->boolean_variable_a = init_ast(AST_BOOLEAN);
-    ast_boolean->boolean_variable_b = init_ast(AST_BOOLEAN);
-    ast_boolean->boolean_variable_a->string_value = parser->prev_token->value;
+    ast_boolean->boolean_variable_a = init_ast(AST_STRING);
+    ast_boolean->boolean_variable_b = init_ast(AST_STRING);
+    ast_boolean->boolean_variable_a->string_value = parser_get_string(parser, 1);
     switch (parser->current_token->type)
     {
         case TOKEN_EQUALTO: ast_boolean->boolean_operator = BOOLEAN_EQUALTO; parser_eat(parser, TOKEN_EQUALTO); break;
@@ -250,9 +251,9 @@ AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope)
         case TOKEN_ELESSTHAN: ast_boolean->boolean_operator = BOOLEAN_ELESSTHAN; parser_eat(parser, TOKEN_ELESSTHAN); break;
         default: throw_exception("invalid boolean operator ", parser->current_token->value);
     }
-    parser_eat(parser, TOKEN_STRING);
-    ast_boolean->boolean_variable_b->string_value = parser->current_token->value;
+    ast_boolean->boolean_variable_b->string_value = parser_get_string(parser, 0);
     ast_boolean->scope = scope;
+
     return ast_boolean;
 }
 
@@ -284,4 +285,17 @@ AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
     {
         return parser_parse_variable(parser, scope);
     }
+}
+
+char* parser_get_string(parser_T* parser, int restrict_string)
+{
+    char* string = parser->prev_token->value;
+
+    if (!restrict_string)
+    {
+        string = parser->current_token->value;
+        parser_eat(parser, TOKEN_STRING);
+    }
+
+    return string;
 }

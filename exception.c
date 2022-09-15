@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "main.h"
+
 void throw_exception(char* msg, char* info)
 {
     if (strcmp(info, "") == 0)
@@ -11,4 +12,9 @@ void throw_exception(char* msg, char* info)
     }
     printf("\nerror in file <%s>: \n  %s '%s'\n", file_path, msg, info);
     exit(1);
+}
+void unsafe_warn()
+{
+    printf("\nunsafe (exitted)");
+    exit(2);
 }

@@ -72,14 +72,14 @@ AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
 {
     if (strcmp(node->statement_definition_type, "if") == 0)
     {
-        if (visitor_visit_boolean(visitor, node)->boolean_value == 1)
+        if (visitor_visit_boolean(visitor, node->statement_definition_args[0])->boolean_value == 1)
         {
             visitor_visit(visitor, node->statement_definition_body);
         }
     }
     else if (strcmp(node->statement_definition_type, "while") == 0)
     {
-        while (visitor_visit_boolean(visitor, node)->boolean_value == 1)
+        while (visitor_visit_boolean(visitor, node->statement_definition_args[0])->boolean_value == 1)
         {
             visitor_visit(visitor, node->statement_definition_body);
         }
@@ -188,12 +188,13 @@ AST_T* visitor_visit_string(visitor_T* visitor, AST_T* node)
 
 AST_T* visitor_visit_boolean(visitor_T* visitor, AST_T* node)
 {
+    AST_T* value_a = visitor_visit(visitor, node->boolean_variable_a);
+    AST_T* value_b = visitor_visit(visitor, node->boolean_variable_b);
     switch (node->boolean_operator)
     {
-        case BOOLEAN_EQUALTO: node->boolean_value = node->boolean_variable_a == node->boolean_variable_b; break;
-        case BOOLEAN_NOTEQUALTO: node->boolean_value = node->boolean_variable_a != node->boolean_variable_b; break;
+        case BOOLEAN_EQUALTO: node->boolean_value = value_a == value_b; break;
+        case BOOLEAN_NOTEQUALTO: node->boolean_value = value_a != value_b; break;
     }
-    printf("%d", node->boolean_value);
     return node;
 }
 

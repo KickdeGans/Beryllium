@@ -20,7 +20,7 @@ void run(char* filepath)
 
 int main(int argc, char* argv[])
 {
-    file_path = argv[1];
+    file_path = argv[argc - 1];
     run(file_path);
     return 0;
 }

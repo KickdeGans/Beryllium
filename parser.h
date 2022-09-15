@@ -42,4 +42,6 @@ AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope);
 AST_T* parser_parse_forloop(parser_T* parser, scope_T* scope);
 
 AST_T* parser_parse_id(parser_T* parser, scope_T* scope);
+
+char* parser_get_string(parser_T* parser, int restrict_string);
 #endif
