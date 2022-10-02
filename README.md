@@ -19,6 +19,11 @@ How to install:
 sudo chmod +x ./install.sh
 sudo ./install.sh
 ```
+Then follow the instructions in the installer.
 
+To verify if the runtime is installed, simply run:
+```C
+fusion --verify
+```
 
 This project is a fork of https://github.com/sebbekarlsson/hello
