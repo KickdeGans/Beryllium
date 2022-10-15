@@ -4,7 +4,6 @@
 #include "parser.h"
 #include "visitor.h"
 #include "lib/io.h"
-#include "exception.h"
 #include "lib/string.h"
 
 static char* file_path;
@@ -20,6 +19,11 @@ void run(char* filepath)
 
 int main(int argc, char* argv[])
 {
+    if (strcmp(argv[argc - 1], "--verify") == 0)
+    {
+        printf("fusion is installed on your system.\n");
+        exit(0);
+    }
     file_path = argv[argc - 1];
     run(file_path);
     return 0;

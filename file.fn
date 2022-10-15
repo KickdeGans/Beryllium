@@ -1,0 +1,7 @@
+for (i => 4)
+{
+    for (x => 5)
+    {
+        printfn(i);
+    }
+}

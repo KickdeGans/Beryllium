@@ -24,6 +24,7 @@ int name_verifier_is_valid_name(char* name)
             if (allowed_chars[j] == name[i])
             {
                 valid = 1;
+                break;
             }
         }
     }
@@ -31,22 +32,28 @@ int name_verifier_is_valid_name(char* name)
 }
 int name_verifier_is_allowed_char(char ch)
 {
-    int valid = 1;
+    int valid = 0;
     for (int i = 0; i < sizeof(allowed_chars); i++)
     {
-        valid = 0;
         if (ch == allowed_chars[i])
         {
             valid = 1;
+            break;
         }
     }
     return valid;
 }
+
 int digits_only(const char *s)
 {
     while (*s) 
     {
-        if (isdigit(*s++) == 0)
+        char c = *s++;
+        if (c == '\0')
+        {
+            return 1;
+        }
+        if (isdigit(c) == 0 || c != '.')
         { 
             return 0;
         }

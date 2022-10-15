@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include "name_verifier.h"
-#include "exception.h"
+#include "lib/string.h"
+#include "token.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -14,6 +15,7 @@ lexer_T* init_lexer(char* contents)
     lexer->i = 0;
     lexer->prev_c = lexer->c;
     lexer->c = contents[lexer->i];
+    lexer->current_line = 1;
 
     return lexer;
 }
@@ -36,10 +38,10 @@ void lexer_skip_whitespace(lexer_T* lexer)
     }
 }
 
-void lexer_handle_comment(lexer_T* lexer)
+void lexer_skip_comment(lexer_T* lexer)
 {
     lexer_advance(lexer);
-    while (lexer->c != '#' || lexer->c != 35)
+    while (lexer->c != '\n' || lexer-> c ==  EOF)
     {
         lexer_advance(lexer);
     }
@@ -54,13 +56,21 @@ token_T* lexer_get_next_token(lexer_T* lexer)
 {
     while (lexer->c != '\0' && lexer->i < strlen(lexer->contents))
     {
+        if (lexer->c == '\n')
+        {
+            lexer->current_line += 1;
+        }
         if (lexer->c == ' ' || lexer->c == 10)
         {
             lexer_skip_whitespace(lexer);
         }
         if (lexer->c == '#' || lexer->c == 35)
         {
-            lexer_handle_comment(lexer);
+            lexer_skip_comment(lexer);
+        }
+        if (isdigit(lexer->c))
+        {
+            return lexer_collect_number(lexer);
         }
         if (isalnum(lexer->c))
         {
@@ -145,7 +155,7 @@ token_T* lexer_collect_id(lexer_T* lexer)
     char* value = calloc(1, sizeof(char));
     value[0] = '\0';
 
-    while (isalnum(lexer->c))
+    while (name_verifier_is_allowed_char(lexer->c))
     {
         char* s = lexer_get_current_char_as_string(lexer);
         value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
@@ -154,12 +164,28 @@ token_T* lexer_collect_id(lexer_T* lexer)
         lexer_advance(lexer);
     }
 
-    if (name_verifier_is_valid_name(value) == 0)
+    if (!name_verifier_is_valid_name(value) && !digits_only(value))
     {
-        throw_exception("invalid identifier name", value);
+        printf("compilation error:\n    invalid identifier name '%s' at line %d", value, lexer->current_line);
+        exit(1);
     }
 
     return init_token(TOKEN_ID, value);
+}
+
+token_T* lexer_collect_number(lexer_T* lexer)
+{
+    char* value = calloc(1, sizeof(char));
+    value[0] = '\0';
+    while (isdigit(lexer->c) || lexer->c == '.')
+    {
+        char* s = lexer_get_current_char_as_string(lexer);
+        value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
+        strcat(value, s);
+
+        lexer_advance(lexer);
+    }
+    return init_token(TOKEN_NUMBER, value);
 }
 
 token_T* lexer_advance_with_token(lexer_T* lexer, token_T* token)
@@ -182,7 +208,6 @@ char* lexer_get_current_char_as_string(lexer_T* lexer)
     char* str = calloc(2, sizeof(char));
     str[0] = lexer->c;
     str[1] = '\0';
-
     return str;
 }
 

@@ -8,14 +8,17 @@ typedef struct AST_STRUCT
         AST_VARIABLE_DEFINITION,
         AST_FUNCTION_DEFINITION,
         AST_STATEMENT_DEFINITION,
+        AST_VARIABLE_SETTTER,
         AST_VARIABLE,
         AST_FUNCTION_CALL,
         AST_STRING,
         AST_BOOLEAN,
+        AST_NUMBER,
         AST_FORLOOP,
         AST_FUNCTION_RETURN,
         AST_COMPOUND,
-        AST_NOOP
+        AST_NOOP,
+        AST_ARRAY
     } type;
 
     enum {
@@ -63,14 +66,28 @@ typedef struct AST_STRUCT
     int boolean_operator;
     int boolean_value;
 
+    /* AST_NUMBER */
+    double ast_number;
+
     /* AST_FORLOOP */
     char* forloop_variable_name;
-    struct AST_STRUCT** forloop_array;
+    struct AST_STRUCT* forloop_value;
+
+    /* AST_VARIABLE_SETTER */
+    char* variable_setter_variable_name;
+    struct AST_STRUCT* variable_setter_value;
 
     /* AST_COMPOUND */
     struct AST_STRUCT** compound_value;
     size_t compound_size;
+
+    /* AST_ARRAY*/
+    struct AST_STRUCT** array_value;
+    size_t array_size;
+
 } AST_T;
 
 AST_T* init_ast(int type);
+AST_T* init_number(double value);
+
 #endif

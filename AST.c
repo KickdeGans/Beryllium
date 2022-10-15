@@ -42,9 +42,30 @@ AST_T* init_ast(int type)
     ast->boolean_type = 0;
     ast->boolean_value = 0;
 
+    /* AST_NUMBER */
+    ast->ast_number = 0;
+
+    /* AST_VARIABLE_SETTER */
+    ast->variable_setter_variable_name = (void*) 0;
+    ast->variable_setter_value = (void*) 0;
+
     /*  AST_COMPOUND */
     ast->compound_value = (void*) 0;
     ast->compound_size = 0;
 
+    /* AST_FORLOOP */
+    ast->forloop_variable_name = (void*) 0;
+
+    /* AST_ARRAY */
+    ast->array_value = (void*) 0;
+    ast->array_size = 0;
+
     return ast;
+}
+
+AST_T* init_number(double value)
+{
+    AST_T* res = init_ast(AST_NUMBER);
+    res->ast_number = value;
+    return res;
 }

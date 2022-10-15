@@ -10,7 +10,9 @@ typedef struct PARSER_STRUCT
     lexer_T* lexer;
     token_T* current_token;
     token_T* prev_token;
+    int eol;
     scope_T* scope;
+    AST_T* prev_ast;
 } parser_T;
 
 parser_T* init_parser(lexer_T* lexer);
@@ -39,9 +41,11 @@ AST_T* parser_parse_string(parser_T* parser, scope_T* scope);
 
 AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope);
 
+AST_T* parser_parse_number(parser_T* parser, scope_T* scope);
+
 AST_T* parser_parse_forloop(parser_T* parser, scope_T* scope);
 
-AST_T* parser_parse_id(parser_T* parser, scope_T* scope);
+AST_T* parser_parse_variable_setter(parser_T* parser, scope_T* scope);
 
-char* parser_get_string(parser_T* parser, int restrict_string);
+AST_T* parser_parse_id(parser_T* parser, scope_T* scope);
 #endif

@@ -27,11 +27,14 @@ typedef struct TOKEN_STRUCT
         TOKEN_QUESTION,
         TOKEN_ARRPTR,
         TOKEN_AND,
-        TOKEN_OR
+        TOKEN_OR,
+        TOKEN_NUMBER
     } type;
 
     char* value;
 } token_T;
 
 token_T* init_token(int type, char* value);
+char* token_get_token_name_from_type(int type);
+
 #endif

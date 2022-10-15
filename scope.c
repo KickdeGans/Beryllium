@@ -1,5 +1,6 @@
 #include "scope.h"
 #include <string.h>
+#include <stdio.h>
 
 
 scope_T* init_scope()
@@ -87,4 +88,20 @@ AST_T* scope_get_variable_definition(scope_T* scope, const char* name)
     }
 
     return (void*)0;
+}
+
+AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* name)
+{
+    for (int i = 0; i < scope->variable_definitions_size; i++)
+    {
+        AST_T* vdef_ = scope->variable_definitions[i];
+        
+        if (strcmp(vdef_->variable_definition_variable_name, name) == 0)
+        {
+            scope->variable_definitions[i]->variable_definition_value = vdef;
+            break;
+        }
+    }
+    vdef->scope = scope;
+    return vdef;
 }
