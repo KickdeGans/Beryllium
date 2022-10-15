@@ -186,12 +186,11 @@ AST_T* visitor_visit_forloop(visitor_T* visitor, AST_T* node)
     }
     return init_ast(AST_NOOP);
 }
-
 AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
 {
     AST_T** args = node->function_call_arguments;
     size_t args_size = node->function_call_arguments_size;
-    if (strcmp(node->function_call_name, "printfn") == 0)
+    if (strcmp(node->function_call_name, "print") == 0)
     {
         for (int i = 0; i < args_size; i++)
         {
@@ -199,8 +198,32 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
             switch (visited_ast->type)
             {
                 case AST_STRING: printf("%s", visited_ast->string_value); break;
-                case AST_NUMBER: printf("%f", visited_ast->ast_number); break;
+                case AST_NUMBER: 
+                    if (visited_ast->ast_number == (int)visited_ast->ast_number)
+                        printf("%i", (int)visited_ast->ast_number);
+                    else
+                        printf("%f", visited_ast->ast_number);
+                    break;
                 default: printf("%s", visited_ast->string_value); break;
+            }
+        }
+        return init_ast(AST_NOOP);
+    }
+    if (strcmp(node->function_call_name, "println") == 0)
+    {
+        for (int i = 0; i < args_size; i++)
+        {
+            AST_T* visited_ast = visitor_visit(visitor, args[i]);
+            switch (visited_ast->type)
+            {
+                case AST_STRING: printf("%s\n", visited_ast->string_value); break;
+                case AST_NUMBER: 
+                    if (visited_ast->ast_number == (int)visited_ast->ast_number)
+                        printf("%i\n", (int)visited_ast->ast_number);
+                    else
+                        printf("%f\n", visited_ast->ast_number);
+                    break;
+                default: printf("%s\n", visited_ast->string_value); break;
             }
         }
         return init_ast(AST_NOOP);
