@@ -19,13 +19,13 @@ fusion --verify
 # Examples:
 
 ## Printing text:
-```C#
+```C
 print("Hello world!"); //Prints without a newline
 println("Hello world!"); //Prints with a newline
 ```
 
 ## Declaring a variables:
-```C#
+```C
 //Variables assigned in scope:
 
 var myVariable = "something"; //Normal variable
@@ -39,7 +39,7 @@ const public myPublicVariable = "something"; //Public variable
 ```
 
 ## Functions:
-```C#
+```C
 //A function that doesn't take arguments:
 
 define myFunc()
@@ -63,7 +63,7 @@ define myFunc()
 ```
 
 ## Statements:
-```C#
+```C
 //An if statement:
 
 if (condition)
@@ -87,7 +87,7 @@ else
 ```
 
 ## Loops:
-```C#
+```C
 //A while loop:
 
 while (condition)
