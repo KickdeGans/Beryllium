@@ -18,7 +18,8 @@ typedef struct AST_STRUCT
         AST_FUNCTION_RETURN,
         AST_COMPOUND,
         AST_NOOP,
-        AST_ARRAY
+        AST_ARRAY,
+        AST_GET_ARRAY_ITEM_BY_INDEX
     } type;
 
     enum {
@@ -84,6 +85,10 @@ typedef struct AST_STRUCT
     /* AST_ARRAY*/
     struct AST_STRUCT** array_value;
     size_t array_size;
+
+    /* AST_GET_ARRAY_ITEM_BY_INDEX */
+    struct AST_STRUCT* array_item;
+    struct AST_STRUCT* array_index;
 
 } AST_T;
 

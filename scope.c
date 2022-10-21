@@ -67,11 +67,10 @@ AST_T* scope_add_variable_definition(scope_T* scope, AST_T* vdef)
         scope->variable_definitions_size += 1;
         scope->variable_definitions = realloc(
             scope->variable_definitions,
-            scope->variable_definitions_size * sizeof(struct AST_STRUCT*)  
+            scope->variable_definitions_size * sizeof(struct AST_STRUCT*)
         );
         scope->variable_definitions[scope->variable_definitions_size-1] = vdef;
     }
-
     return vdef;
 }
 
@@ -104,4 +103,19 @@ AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* na
     }
     vdef->scope = scope;
     return vdef;
+}
+
+AST_T* scope_remove_variable_definition(scope_T* scope, const char* name)
+{
+    for (int i = 0; i < scope->variable_definitions_size; i++)
+    {
+        AST_T* vdef_ = scope->variable_definitions[i];
+        
+        if (strcmp(vdef_->variable_definition_variable_name, name) == 0)
+        {
+            scope->variable_definitions[i]->variable_definition_value = (void*) 0;
+            break;
+        }
+    }
+    return (void*)0;
 }

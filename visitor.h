@@ -21,6 +21,10 @@ AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node);
 
 AST_T* visitor_visit_forloop(visitor_T* visitor, AST_T* node);
 
+AST_T* visitor_visit_array(visitor_T* visitor, AST_T* node);
+
+AST_T* visitor_visit_get_array_by_index(visitor_T* visitor, AST_T* node);
+
 AST_T* visitor_visit_variable(visitor_T* visitor, AST_T* node);
 
 AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node);

@@ -1,7 +1,2 @@
-for (i => 4)
-{
-    for (x => 5)
-    {
-        println(i);
-    }
-}
+import("stdlib");
+function();

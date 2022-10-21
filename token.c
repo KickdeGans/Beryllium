@@ -22,8 +22,8 @@ char* token_get_token_name_from_type(int type)
         case TOKEN_SEMI: return ";";
         case TOKEN_LPAREN: return "(";
         case TOKEN_RPAREN: return ")";
-        case TOKEN_RBRACE: return "{";
-        case TOKEN_LBRACE: return "}";
+        case TOKEN_LBRACE: return "{";
+        case TOKEN_RBRACE: return "}";
         case TOKEN_LBRACKET: return "[";
         case TOKEN_RBRACKET: return "]";
         case TOKEN_COMMA: return ",";

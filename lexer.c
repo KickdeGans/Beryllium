@@ -1,5 +1,5 @@
 #include "lexer.h"
-#include "name_verifier.h"
+#include "identifier.h"
 #include "lib/string.h"
 #include "token.h"
 #include <stdlib.h>
@@ -155,7 +155,7 @@ token_T* lexer_collect_id(lexer_T* lexer)
     char* value = calloc(1, sizeof(char));
     value[0] = '\0';
 
-    while (name_verifier_is_allowed_char(lexer->c))
+    while (is_allowed_char(lexer->c))
     {
         char* s = lexer_get_current_char_as_string(lexer);
         value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
@@ -164,7 +164,7 @@ token_T* lexer_collect_id(lexer_T* lexer)
         lexer_advance(lexer);
     }
 
-    if (!name_verifier_is_valid_name(value) && !digits_only(value))
+    if (!is_valid_name(value) && !digits_only(value))
     {
         printf("compilation error:\n    invalid identifier name '%s' at line %d", value, lexer->current_line);
         exit(1);

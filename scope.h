@@ -24,4 +24,6 @@ AST_T* scope_get_variable_definition(scope_T* scope, const char* name);
 
 AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* name);
 
+AST_T* scope_remove_variable_definition(scope_T* scope, const char* name);
+
 #endif

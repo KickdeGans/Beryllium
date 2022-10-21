@@ -3,7 +3,7 @@
 #include "lexer.h"
 #include "scope.h"
 #include "lib/string.h"
-#include "name_verifier.h"
+#include "identifier.h"
 #include "token.h"
 #include <stdio.h>
 #include <string.h>
@@ -16,7 +16,6 @@ parser_T* init_parser(lexer_T* lexer)
     parser->current_token = lexer_get_next_token(lexer);
     parser->prev_token = parser->current_token;
     parser->scope = init_scope();
-    parser->eol = -1;
     return parser;
 }
 
@@ -85,8 +84,16 @@ AST_T* parser_parse_statements(parser_T* parser, scope_T* scope)
 
 AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
 {
-    while (parser->current_token->type != parser->eol)
+    while (1)
     {
+        if (parser->current_token->type == TOKEN_RBRACKET ||
+            parser->current_token->type == TOKEN_RPAREN ||
+            parser->current_token->type == TOKEN_RBRACE ||
+            parser->current_token->type == TOKEN_COMMA ||
+            parser->current_token->type == TOKEN_SEMI)
+        {
+            break;
+        }
         switch (parser->current_token->type)
         { 
             case TOKEN_STRING: parser->prev_ast = parser_parse_string(parser, scope); break;
@@ -98,15 +105,12 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
             case TOKEN_LESSTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
             case TOKEN_EGREATERTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
             case TOKEN_ELESSTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
-            case TOKEN_ARRPTR: parser->prev_ast = parser_parse_forloop(parser, scope);
+            case TOKEN_ARRPTR: parser->prev_ast = parser_parse_forloop(parser, scope); break;
+            case TOKEN_LBRACE: parser->prev_ast = parser_parse_array(parser, scope);
+            case TOKEN_LBRACKET: parser->prev_ast = parser_parse_array_get_by_index(parser, scope);
             default: break;
         }
-        if (parser->eol == -1)
-        {
-            break;
-        }
     }
-    parser->eol = -1;
     return parser->prev_ast;
 }
 
@@ -139,7 +143,7 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
 {
     parser_eat(parser, TOKEN_ID);
     char* variable_definition_variable_name = parser->current_token->value;
-    if (name_verifier_is_valid_name(variable_definition_variable_name) == 0)
+    if (!is_valid_name(variable_definition_variable_name))
     {
         printf("compilation error:\n    invalid variable name '%s' at line %d", variable_definition_variable_name, parser->lexer->current_line);
         exit(1);
@@ -149,6 +153,7 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
     {
         AST_T* variable_definition = init_ast(AST_VARIABLE_DEFINITION);
         variable_definition->variable_definition_variable_name = variable_definition_variable_name;
+        variable_definition->variable_definition_value = init_ast(AST_NOOP);
         variable_definition->scope = scope;
         return variable_definition;
     }
@@ -169,7 +174,7 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
             strlen(function_name) + 1, sizeof(char)
     );
     strcpy(ast->function_definition_name, function_name);
-    if (name_verifier_is_valid_name(function_name) == 0)
+    if (!is_valid_name(function_name))
     {
         printf("compilation error:\n    invalid function name '%s' at line %d", function_name, parser->lexer->current_line);
         exit(1);
@@ -212,11 +217,11 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
         ast->statement_definition_body = parser_parse_statements(parser, scope);
         parser_eat(parser, TOKEN_RBRACE);
         parser_eat(parser, TOKEN_SEMI);
+        ast->scope = scope;
         return ast;
     }
     parser_eat(parser, TOKEN_LPAREN);
     ast->statement_definition_args = calloc(1, sizeof(struct AST_STRUCT*));
-    parser->eol = TOKEN_RPAREN;
     AST_T* arg = parser_parse_expr(parser, scope);
     ast->statement_definition_args_size += 1;
     ast->statement_definition_args[ast->statement_definition_args_size-1] = arg;
@@ -224,6 +229,7 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
     parser_eat(parser, TOKEN_LBRACE);
     ast->statement_definition_body = parser_parse_statements(parser, scope);
     parser_eat(parser, TOKEN_RBRACE);
+    ast->scope = scope;
     return ast;
 }
 
@@ -260,6 +266,40 @@ AST_T* parser_parse_string(parser_T* parser, scope_T* scope)
     ast_string->scope = scope;
 
     return ast_string;
+}
+
+AST_T* parser_parse_array(parser_T* parser, scope_T* scope)
+{
+    parser_eat(parser, TOKEN_LBRACE);
+    AST_T* ast_array = init_ast(AST_ARRAY);
+    ast_array->array_value = calloc(1, sizeof(struct AST_STRUCT*));
+    ast_array->array_value[0] = parser_parse_expr(parser, scope);
+    ast_array->array_size += 1;
+    while (parser->current_token->type != TOKEN_RBRACE)
+    {
+        parser_eat(parser, TOKEN_COMMA);
+        ast_array->array_size += 1;
+        ast_array->array_value = realloc(
+            ast_array->array_value,
+            ast_array->array_size * sizeof(struct AST_STRUCT*)
+        );
+        ast_array->array_value[ast_array->array_size-1] = parser_parse_expr(parser, scope);
+    }
+    parser_eat(parser, TOKEN_RBRACE);
+    ast_array->scope = scope;
+    return ast_array;
+}
+
+AST_T* parser_parse_array_get_by_index(parser_T* parser, scope_T* scope)
+{
+    printf("%s", parser->current_token->value);
+    AST_T* ast = init_ast(AST_GET_ARRAY_ITEM_BY_INDEX);
+    parser_eat(parser, TOKEN_LBRACKET);
+    ast->array_index = parser_parse_expr(parser, scope);
+    parser_eat(parser, TOKEN_RBRACKET);
+    ast->array_item = parser->prev_ast;
+    ast->scope = scope; 
+    return ast;
 }
 
 AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope)
