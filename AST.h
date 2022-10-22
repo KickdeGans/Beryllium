@@ -19,7 +19,8 @@ typedef struct AST_STRUCT
         AST_COMPOUND,
         AST_NOOP,
         AST_ARRAY,
-        AST_GET_ARRAY_ITEM_BY_INDEX
+        AST_GET_ARRAY_ITEM_BY_INDEX,
+        AST_DICT_ITEM
     } type;
 
     enum {
@@ -89,6 +90,10 @@ typedef struct AST_STRUCT
     /* AST_GET_ARRAY_ITEM_BY_INDEX */
     struct AST_STRUCT* array_item;
     struct AST_STRUCT* array_index;
+
+    /* AST_DICT_ITEM */
+    char* dict_key;
+    struct AST_STRUCT* dict_value;
 
 } AST_T;
 

@@ -106,8 +106,9 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
             case TOKEN_EGREATERTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
             case TOKEN_ELESSTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
             case TOKEN_ARRPTR: parser->prev_ast = parser_parse_forloop(parser, scope); break;
-            case TOKEN_LBRACE: parser->prev_ast = parser_parse_array(parser, scope);
-            case TOKEN_LBRACKET: parser->prev_ast = parser_parse_array_get_by_index(parser, scope);
+            case TOKEN_LBRACE: parser->prev_ast = parser_parse_array(parser, scope); break;
+            case TOKEN_LBRACKET: parser->prev_ast = parser_parse_array_get_by_index(parser, scope); break;
+            case TOKEN_COLON: parser->prev_ast = parser_parse_dict_item(parser, scope); break;
             default: break;
         }
     }
@@ -182,10 +183,10 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
     parser_eat(parser, TOKEN_ID);
     parser_eat(parser, TOKEN_LPAREN);
     ast->function_definition_args = calloc(1, sizeof(struct AST_STRUCT*));
-    if (parser->current_token == TOKEN_ID)
+    if (parser->current_token->type == TOKEN_ID)
     {
         AST_T* arg = parser_parse_variable(parser, scope);
-        ast->function_definition_args_size += 1;
+        ast->function_definition_args_size = 1;
         ast->function_definition_args[ast->function_definition_args_size-1] = arg;
         while (parser->current_token->type == TOKEN_COMMA)
         {
@@ -197,6 +198,13 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
         }
     }
     parser_eat(parser, TOKEN_RPAREN);
+    if (parser->current_token->type == TOKEN_EQUALS)
+    {
+        parser_eat(parser, TOKEN_EQUALS);
+        ast->function_definition_body = parser_parse_statement(parser, scope);
+        ast->scope = scope;
+        return ast;
+    }
     parser_eat(parser, TOKEN_LBRACE);
     ast->function_definition_body = parser_parse_statements(parser, scope);
     parser_eat(parser, TOKEN_RBRACE);
@@ -275,6 +283,7 @@ AST_T* parser_parse_array(parser_T* parser, scope_T* scope)
     ast_array->array_value = calloc(1, sizeof(struct AST_STRUCT*));
     ast_array->array_value[0] = parser_parse_expr(parser, scope);
     ast_array->array_size += 1;
+    int type = ast_array->array_value[0]->type;
     while (parser->current_token->type != TOKEN_RBRACE)
     {
         parser_eat(parser, TOKEN_COMMA);
@@ -284,6 +293,11 @@ AST_T* parser_parse_array(parser_T* parser, scope_T* scope)
             ast_array->array_size * sizeof(struct AST_STRUCT*)
         );
         ast_array->array_value[ast_array->array_size-1] = parser_parse_expr(parser, scope);
+        if (ast_array->array_value[ast_array->array_size-1]->type != type)
+        {
+            printf("compilation error:\n    valueError");
+            exit(1);
+        }
     }
     parser_eat(parser, TOKEN_RBRACE);
     ast_array->scope = scope;
@@ -292,13 +306,18 @@ AST_T* parser_parse_array(parser_T* parser, scope_T* scope)
 
 AST_T* parser_parse_array_get_by_index(parser_T* parser, scope_T* scope)
 {
-    printf("%s", parser->current_token->value);
     AST_T* ast = init_ast(AST_GET_ARRAY_ITEM_BY_INDEX);
-    parser_eat(parser, TOKEN_LBRACKET);
-    ast->array_index = parser_parse_expr(parser, scope);
-    parser_eat(parser, TOKEN_RBRACKET);
+
     ast->array_item = parser->prev_ast;
+
+    parser_eat(parser, TOKEN_LBRACKET);
+
+    ast->array_index = parser_parse_expr(parser, scope);
+
+    parser_eat(parser, TOKEN_RBRACKET);
+
     ast->scope = scope; 
+
     return ast;
 }
 
@@ -366,6 +385,24 @@ AST_T* parser_parse_variable_setter(parser_T* parser, scope_T* scope)
 
     ast_varset->scope = scope;
     return ast_varset;
+}
+
+AST_T* parser_parse_dict_item(parser_T* parser, scope_T* scope)
+{
+    parser_eat(parser, TOKEN_COLON);
+    AST_T* dict_item = init_ast(AST_DICT_ITEM);
+    
+    if (parser->prev_ast->type != AST_STRING)
+    {
+        printf("compilation error:\n    dictionary key value must be of type string\n");
+        exit(1);
+    }
+
+    dict_item->dict_key = parser->prev_ast->string_value;
+    dict_item->dict_value = parser_parse_expr(parser, scope);
+    dict_item->scope;
+
+    return dict_item;
 }
 
 AST_T* parser_parse_id(parser_T* parser, scope_T* scope)

@@ -41,6 +41,7 @@ AST_T* visitor_visit(visitor_T* visitor, AST_T* node)
         case AST_BOOLEAN: return visitor_visit_boolean(visitor, node); break;
         case AST_ARRAY: return visitor_visit_array(visitor, node); break;
         case AST_GET_ARRAY_ITEM_BY_INDEX: return visitor_visit_get_array_by_index(visitor, node); break;
+        case AST_DICT_ITEM: return visitor_visit_dict_item(visitor, node); break;
         case AST_NOOP: return node; break;
         default: break;
     }
@@ -64,8 +65,8 @@ AST_T* visitor_visit_variable_definition(visitor_T* visitor, AST_T* node)
 AST_T* visitor_visit_function_definition(visitor_T* visitor, AST_T* node)
 {
     scope_add_function_definition(
-        node->scope,
-        node        
+        visitor->scope,
+        node
     );
 
     return node;
@@ -216,14 +217,31 @@ AST_T* visitor_visit_get_array_by_index(visitor_T* visitor, AST_T* node)
 {
     AST_T* item = visitor_visit(visitor, node->array_item);
     AST_T* index = visitor_visit(visitor, node->array_index);
-    if (index->type != AST_NUMBER)
-    {
-        printf("runtime error:\n    array index must be a number");
-        exit(1);
-    }
     if (item->type != AST_ARRAY)
     {
-        printf("runtime error:\n    type must be array");
+        printf("runtime error:\n    type must be array\n");
+        exit(1);
+    }
+    if (index->type == AST_STRING)
+    {
+        for (int i = 0; i < item->array_size; i++)
+        {
+            if (strcmp(item->array_value[i]->dict_key, index->string_value) == 0)
+            {
+                return item->array_value[i]->dict_value;
+            }
+        }
+        printf("runtime error:\n    key '%s' does not exist in dictionary", index->string_value);
+        exit(1);
+    }
+    if (index->type != AST_NUMBER)
+    {
+        printf("runtime error:\n    array index must be a number\n");
+        exit(1);
+    }
+    if (index->ast_number >= item->array_size)
+    {
+        printf("runtime error:\n    index was outside bounds of the array\n");
         exit(1);
     }
     return item->array_value[(int)index->ast_number];
@@ -381,14 +399,14 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
             exit(1);
         }
     }
-    if (node->function_call_arguments_size > 0 && fdef->function_call_arguments_size > 0)
+    if (node->function_call_arguments_size > 0 && fdef->function_definition_args_size > 0)
     {
         for (int i = 0; i < (int) node->function_call_arguments_size; i++)
         {
             AST_T* ast_var = (AST_T*) fdef->function_definition_args[i];
             AST_T* ast_value = (AST_T*) node->function_call_arguments[i];
             AST_T* ast_vardef = init_ast(AST_VARIABLE_DEFINITION);
-            ast_vardef->variable_definition_value = ast_value;
+            ast_vardef->variable_definition_value = visitor_visit(visitor, ast_value);
             ast_vardef->variable_definition_variable_name = (char*) calloc(strlen(ast_var->variable_name) + 1, sizeof(char));
             strcpy(ast_vardef->variable_definition_variable_name, ast_var->variable_name);
             scope_add_variable_definition(fdef->function_definition_body->scope, ast_vardef);
@@ -396,6 +414,13 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
     }
     
     return visitor_visit(visitor, fdef->function_definition_body);
+}
+
+AST_T* visitor_visit_dict_item(visitor_T* visitor, AST_T* node)
+{
+    node->dict_value = visitor_visit(visitor, node->dict_value);
+
+    return node;
 }
 
 AST_T* visitor_visit_array(visitor_T* visitor, AST_T* node)

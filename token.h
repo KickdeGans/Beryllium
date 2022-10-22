@@ -28,7 +28,8 @@ typedef struct TOKEN_STRUCT
         TOKEN_ARRPTR,
         TOKEN_AND,
         TOKEN_OR,
-        TOKEN_NUMBER
+        TOKEN_NUMBER,
+        TOKEN_COLON
     } type;
 
     char* value;
