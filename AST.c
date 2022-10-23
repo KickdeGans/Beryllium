@@ -7,10 +7,13 @@ AST_T* init_ast(int type)
     ast->type = type;
   
     ast->scope = (void*) 0;
+    ast->private_scope = (void*) 0;
   
     /*  AST_VARIABLE_DEFINITION */
     ast->variable_definition_variable_name = (void*) 0;
     ast->variable_definition_value = (void*) 0;
+    ast->variable_definition_is_public = -1;
+    ast->variable_definition_is_const = 0;
   
     /*  AST_FUNCTION_DEFINITION */
     ast->function_definition_body = (void*) 0;

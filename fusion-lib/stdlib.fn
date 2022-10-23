@@ -1,5 +1,1 @@
-define function()
-{
-    println("test");
-};
-define stdioOut(str) = system("echo ", str);
+#no implementation yet

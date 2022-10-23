@@ -41,7 +41,7 @@ void lexer_skip_whitespace(lexer_T* lexer)
 void lexer_skip_comment(lexer_T* lexer)
 {
     lexer_advance(lexer);
-    while (lexer->c != '\n' || lexer-> c ==  EOF)
+    while (lexer->c != '\n' || lexer-> c != EOF || lexer->c != '#')
     {
         lexer_advance(lexer);
     }
@@ -167,7 +167,7 @@ token_T* lexer_collect_id(lexer_T* lexer)
 
     if (!is_valid_name(value) && !digits_only(value))
     {
-        printf("compilation error:\n    invalid identifier name '%s' at line %d", value, lexer->current_line);
+        printf("\ncompilation error:\n    invalid identifier name '%s' at line %d\n", value, lexer->current_line);
         exit(1);
     }
 

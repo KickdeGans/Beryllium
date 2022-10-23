@@ -28,11 +28,11 @@ void parser_eat(parser_T* parser, int token_type)
     }
     else if (token_type == TOKEN_SEMI)
     {
-        printf("compilation error:\n    expected semicolon at line %d", parser->lexer->current_line);
+        printf("\ncompilation error:\n    expected semicolon at line %d\n", parser->lexer->current_line);
     }
     else
     {
-        printf("compilation error:\n    unexpected token '%s' at line %d. expected '%s'\n", parser->current_token->value, parser->lexer->current_line, token_get_token_name_from_type(token_type));
+        printf("\ncompilation error:\n    unexpected token '%s' at line %d. expected '%s'\n", parser->current_token->value, parser->lexer->current_line, token_get_token_name_from_type(token_type));
         exit(1);
     }
 }
@@ -142,11 +142,22 @@ AST_T* parser_parse_function_call(parser_T* parser, scope_T* scope)
 
 AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
 {
+    int is_public = !strcmp(parser->current_token->value, "public");
+    int is_const = 0;
+    if (strcmp(parser->current_token->value, "const") == 0)
+    {
+        is_const = 1;
+    }
     parser_eat(parser, TOKEN_ID);
+    if (strcmp(parser->current_token->value, "const") == 0)
+    {
+        parser_eat(parser, TOKEN_ID);
+        is_const = 1;
+    }
     char* variable_definition_variable_name = parser->current_token->value;
     if (!is_valid_name(variable_definition_variable_name))
     {
-        printf("compilation error:\n    invalid variable name '%s' at line %d", variable_definition_variable_name, parser->lexer->current_line);
+        printf("\ncompilation error:\n    invalid variable name '%s' at line %d\n", variable_definition_variable_name, parser->lexer->current_line);
         exit(1);
     }
     parser_eat(parser, TOKEN_ID);
@@ -162,6 +173,8 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
     AST_T* variable_definition_value = parser_parse_expr(parser, scope);
     AST_T* variable_definition = init_ast(AST_VARIABLE_DEFINITION);
     variable_definition->variable_definition_variable_name = variable_definition_variable_name;
+    variable_definition->variable_definition_is_public = is_public;
+    variable_definition->variable_definition_is_const = is_const;
     variable_definition->variable_definition_value = variable_definition_value;
     variable_definition->scope = scope;
     return variable_definition;
@@ -177,7 +190,7 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
     strcpy(ast->function_definition_name, function_name);
     if (!is_valid_name(function_name))
     {
-        printf("compilation error:\n    invalid function name '%s' at line %d", function_name, parser->lexer->current_line);
+        printf("\ncompilation error:\n    invalid function name '%s' at line %d\n", function_name, parser->lexer->current_line);
         exit(1);
     }
     parser_eat(parser, TOKEN_ID);
@@ -295,7 +308,7 @@ AST_T* parser_parse_array(parser_T* parser, scope_T* scope)
         ast_array->array_value[ast_array->array_size-1] = parser_parse_expr(parser, scope);
         if (ast_array->array_value[ast_array->array_size-1]->type != type)
         {
-            printf("compilation error:\n    valueError");
+            printf("\ncompilation error:\n    valueError\n");
             exit(1);
         }
     }
@@ -337,7 +350,7 @@ AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope)
         case TOKEN_LESSTHAN: ast_boolean->boolean_operator = BOOLEAN_LESSTHAN; parser_eat(parser, TOKEN_LESSTHAN); break;
         case TOKEN_EGREATERTHAN: ast_boolean->boolean_operator = BOOLEAN_EGREATERTHAN; parser_eat(parser, TOKEN_EGREATERTHAN); break;
         case TOKEN_ELESSTHAN: ast_boolean->boolean_operator = BOOLEAN_ELESSTHAN; parser_eat(parser, TOKEN_ELESSTHAN); break;
-        default: printf("compilation error:\n    invalid boolean operator '%s' at line %d", parser->current_token->value, parser->lexer->current_line); exit(1);
+        default: printf("\ncompilation error:\n    invalid boolean operator '%s' at line %d\n", parser->current_token->value, parser->lexer->current_line); exit(1);
     }
     
     ast_boolean->boolean_variable_b = parser_parse_expr(parser, scope);
@@ -394,7 +407,7 @@ AST_T* parser_parse_dict_item(parser_T* parser, scope_T* scope)
     
     if (parser->prev_ast->type != AST_STRING)
     {
-        printf("compilation error:\n    dictionary key value must be of type string\n");
+        printf("\ncompilation error:\n    dictionary key value must be of type string\n");
         exit(1);
     }
 
@@ -407,7 +420,9 @@ AST_T* parser_parse_dict_item(parser_T* parser, scope_T* scope)
 
 AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
 {
-    if (strcmp(parser->current_token->value, "var") == 0)
+    if (strcmp(parser->current_token->value, "var") == 0 ||
+        strcmp(parser->current_token->value, "public") == 0 ||
+        strcmp(parser->current_token->value, "const") == 0)
     {
         return parser_parse_variable_definition(parser, scope);
     }

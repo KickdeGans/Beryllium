@@ -97,12 +97,17 @@ AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* na
         
         if (strcmp(vdef_->variable_definition_variable_name, name) == 0)
         {
+            if (scope->variable_definitions[i]->variable_definition_is_const)
+            {
+                printf("\nruntime error:\n    cant re-assign value to constant\n");
+                exit(1);
+            }
             scope->variable_definitions[i]->variable_definition_value = vdef;
-            break;
+            vdef->scope = scope;
+            return vdef;
         }
     }
-    vdef->scope = scope;
-    return vdef;
+    return (void*) 0;
 }
 
 AST_T* scope_remove_variable_definition(scope_T* scope, const char* name)
@@ -113,7 +118,7 @@ AST_T* scope_remove_variable_definition(scope_T* scope, const char* name)
         
         if (strcmp(vdef_->variable_definition_variable_name, name) == 0)
         {
-            scope->variable_definitions[i]->variable_definition_value = (void*) 0;
+            scope->variable_definitions[i] = (void*) 0;
             break;
         }
     }

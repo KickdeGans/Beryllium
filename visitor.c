@@ -45,7 +45,7 @@ AST_T* visitor_visit(visitor_T* visitor, AST_T* node)
         case AST_NOOP: return node; break;
         default: break;
     }
-    printf("runtime error:\n    uncaught statement of type %d", node->type);
+    printf("\nruntime error:\n    uncaught statement of type %d\n", node->type);
     exit(1);
 
     return init_ast(AST_NOOP);
@@ -53,7 +53,20 @@ AST_T* visitor_visit(visitor_T* visitor, AST_T* node)
 
 AST_T* visitor_visit_variable_definition(visitor_T* visitor, AST_T* node)
 {
+    if (scope_get_variable_definition(node->scope, node->variable_definition_variable_name) != (void*) 0 || scope_get_variable_definition(node->scope, node->variable_definition_variable_name) != (void*) 0)
+    {
+        printf("\nruntime error:\n    variable with name %s already defined\n", node->variable_definition_variable_name);
+        exit(1);
+    }
     node->variable_definition_value = visitor_visit(visitor, node->variable_definition_value);
+    if (node->variable_definition_is_public)
+    {
+        scope_add_variable_definition(
+            visitor->scope,
+            node 
+        );
+        return node;
+    }
     scope_add_variable_definition(
         node->scope,
         node 
@@ -90,7 +103,7 @@ AST_T* visitor_visit_variable(visitor_T* visitor, AST_T* node)
     if (vdef != (void*) 0)
         return visitor_visit(visitor, vdef->variable_definition_value);
 
-    printf("runtime error:\n    invalid variable definition with name '%s'", node->variable_name);
+    printf("\nruntime error:\n    invalid variable definition with name '%s'\n", node->variable_name);
     exit(1);
 
     return init_ast(AST_NOOP);
@@ -219,7 +232,7 @@ AST_T* visitor_visit_get_array_by_index(visitor_T* visitor, AST_T* node)
     AST_T* index = visitor_visit(visitor, node->array_index);
     if (item->type != AST_ARRAY)
     {
-        printf("runtime error:\n    type must be array\n");
+        printf("\nruntime error:\n    type must be array\n");
         exit(1);
     }
     if (index->type == AST_STRING)
@@ -231,17 +244,17 @@ AST_T* visitor_visit_get_array_by_index(visitor_T* visitor, AST_T* node)
                 return item->array_value[i]->dict_value;
             }
         }
-        printf("runtime error:\n    key '%s' does not exist in dictionary", index->string_value);
+        printf("\nruntime error:\n    key '%s' does not exist in dictionary\n", index->string_value);
         exit(1);
     }
     if (index->type != AST_NUMBER)
     {
-        printf("runtime error:\n    array index must be a number\n");
+        printf("\nruntime error:\n    array index must be a number\n");
         exit(1);
     }
     if (index->ast_number >= item->array_size)
     {
-        printf("runtime error:\n    index was outside bounds of the array\n");
+        printf("\nruntime error:\n    index was outside bounds of the array\n");
         exit(1);
     }
     return item->array_value[(int)index->ast_number];
@@ -335,7 +348,14 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
             switch (visited_ast->type)
             {
                 case AST_STRING: printf("%s", visited_ast->string_value); break;
-                case AST_NUMBER: printf("%f", visited_ast->ast_number); break;
+                case AST_NUMBER: 
+                    if (visited_ast->ast_number == (int)visited_ast->ast_number)
+                        printf("%i", (int)visited_ast->ast_number);
+                    else
+                        printf("%f", visited_ast->ast_number);
+                    break;
+                case AST_NOOP: printf("null"); break;
+                default: printf("%s", visited_ast->string_value); break;
             }
         }
         scanf("%s", ast->string_value);
@@ -381,6 +401,18 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
         import(visitor, path);
         return node;
     }
+    if (strcmp(node->function_call_name, "free") == 0)
+    {
+        scope_remove_variable_definition(
+            node->scope,
+            args[0]->variable_name
+        );
+        scope_remove_variable_definition(
+            visitor->scope,
+            args[0]->variable_name
+        );
+        return node;
+    }
 
     AST_T* fdef = scope_get_function_definition(
         node->scope,
@@ -395,7 +427,7 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
         );
         if (fdef == (void*)0)
         {
-            printf("runtime error:\n    undefined method '%s'", node->function_call_name);
+            printf("\nruntime error:\n    undefined method '%s'\n", node->function_call_name);
             exit(1);
         }
     }
@@ -466,9 +498,19 @@ AST_T* visitor_visit_variable_setter(visitor_T* visitor, AST_T* node)
 {
     AST_T* visited_ast = visitor_visit(visitor, node->variable_setter_value);
 
+    if (scope_get_variable_definition(node->scope, node->variable_setter_variable_name) == (void*) 0 || scope_get_variable_definition(visitor->scope, node->variable_setter_variable_name) == (void*) 0)
+    {
+        printf("\nruntime error:\n    variable %s does not exist\n", node->variable_setter_variable_name);
+        exit(1);
+    }
 
     scope_set_variable_definition(
         node->scope, 
+        visited_ast, 
+        node->variable_setter_variable_name
+    );
+    scope_set_variable_definition(
+        visitor->scope, 
         visited_ast, 
         node->variable_setter_variable_name
     );

@@ -33,10 +33,13 @@ typedef struct AST_STRUCT
     } boolean_type;
 
     struct SCOPE_STRUCT* scope;
+    struct SCOPE_STRUCT* private_scope;
 
     /* AST_VARIABLE_DEFINITION */
     char* variable_definition_variable_name;
     struct AST_STRUCT* variable_definition_value;
+    int variable_definition_is_public;
+    int variable_definition_is_const;
 
     /* AST_FUNCTION_DEFINITION */
     struct AST_STRUCT* function_definition_body;

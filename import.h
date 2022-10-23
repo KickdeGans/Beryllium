@@ -3,6 +3,6 @@
 
 #include "visitor.h"
 
-void import(const visitor_T* visitor, const char* path);
+void import(visitor_T* visitor, const char* path);
 
 #endif
