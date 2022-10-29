@@ -58,8 +58,12 @@ define myFunc(argument)
 
 define myFunc()
 {
-    return "This value returned from a function!";
+    return("This value returned from a function!");
 };
+
+//A consise function
+
+define myFunc() ...
 ```
 
 ## Statements:
