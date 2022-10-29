@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+#include "AST.h"
 #include "lexer.h"
 #include "parser.h"
+#include "scope.h"
 #include "visitor.h"
 #include "lib/io.h"
 

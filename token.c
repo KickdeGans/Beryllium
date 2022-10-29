@@ -37,7 +37,7 @@ char* token_get_token_name_from_type(int type)
         case TOKEN_ELESSTHAN: return "<=";
         case TOKEN_EXCLAMATION: return "!";
         case TOKEN_QUESTION: return "?";
-        case TOKEN_ARRPTR: return "=>";
+        case TOKEN_LAMBDA: return "=>";
         case TOKEN_AND: return "&&";
         case TOKEN_OR: return "||";
         case TOKEN_NUMBER: return "number value";

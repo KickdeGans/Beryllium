@@ -8,6 +8,7 @@ typedef struct AST_STRUCT
         AST_VARIABLE_DEFINITION,
         AST_FUNCTION_DEFINITION,
         AST_STATEMENT_DEFINITION,
+        AST_CLASS_DEFINITION,
         AST_VARIABLE_SETTTER,
         AST_VARIABLE,
         AST_FUNCTION_CALL,
@@ -20,7 +21,7 @@ typedef struct AST_STRUCT
         AST_NOOP,
         AST_ARRAY,
         AST_GET_ARRAY_ITEM_BY_INDEX,
-        AST_DICT_ITEM
+        AST_DICT_ITEM,
     } type;
 
     enum {
@@ -97,10 +98,8 @@ typedef struct AST_STRUCT
     /* AST_DICT_ITEM */
     char* dict_key;
     struct AST_STRUCT* dict_value;
-
 } AST_T;
 
 AST_T* init_ast(int type);
-AST_T* init_number(double value);
 
 #endif

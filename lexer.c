@@ -41,8 +41,9 @@ void lexer_skip_whitespace(lexer_T* lexer)
 void lexer_skip_comment(lexer_T* lexer)
 {
     lexer_advance(lexer);
-    while (lexer->c != '\n' || lexer-> c != EOF || lexer->c != '#')
+    while (lexer->c != '\n' || lexer-> c != EOF || lexer->c != '#' || lexer->c != '\0')
     {
+        printf("%c", lexer->c);   
         lexer_advance(lexer);
     }
 }
@@ -87,7 +88,7 @@ token_T* lexer_get_next_token(lexer_T* lexer)
                 switch (next_token)
                 {
                     case '=': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_EQUALTO, lexer_get_current_doubletok_as_string(lexer))); 
-                    case '>': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_ARRPTR, lexer_get_current_doubletok_as_string(lexer))); 
+                    case '>': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_LAMBDA, lexer_get_current_doubletok_as_string(lexer))); 
                 }
             return lexer_advance_with_token(lexer, init_token(TOKEN_EQUALS, lexer_get_current_char_as_string(lexer))); break;
             case ';': return lexer_advance_with_token(lexer, init_token(TOKEN_SEMI, lexer_get_current_char_as_string(lexer))); break;
@@ -142,6 +143,22 @@ token_T* lexer_collect_string(lexer_T* lexer)
     while (lexer->c != '"')
     {
         char* s = lexer_get_current_char_as_string(lexer);
+        if (strcmp(s, "\\") == 0)
+        {
+            lexer_advance(lexer);
+            switch (lexer->c)
+            {
+                case 'b': s = "\b"; break;
+                case 'f': s = "\f"; break;
+                case 'n': s = "\n"; break;
+                case 'r': s = "\r"; break;
+                case '"': s = "\""; break;
+                case 'a': s = "\a"; break;
+                case 't': s = "\t"; break;
+                case 'v': s = "\v"; break;
+                case '0': s = "\0"; break;
+            }
+        }
         value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
         strcat(value, s);
 
@@ -156,7 +173,7 @@ token_T* lexer_collect_id(lexer_T* lexer)
     char* value = calloc(1, sizeof(char));
     value[0] = '\0';
 
-    while (is_allowed_char(lexer->c))
+    while (isalnum(lexer->c))
     {
         char* s = lexer_get_current_char_as_string(lexer);
         value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));

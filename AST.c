@@ -65,10 +65,3 @@ AST_T* init_ast(int type)
 
     return ast;
 }
-
-AST_T* init_number(double value)
-{
-    AST_T* res = init_ast(AST_NUMBER);
-    res->ast_number = value;
-    return res;
-}

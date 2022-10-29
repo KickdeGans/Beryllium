@@ -16,5 +16,5 @@ void append_array(AST_T** array, AST_T* item, size_t* length)
         *length * sizeof(struct AST_STRUCT**)
     );
     array[*length - 1] = item;
-    printf("appended array, new length is %i\n", length);
+    return;
 }

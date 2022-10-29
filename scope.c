@@ -1,4 +1,5 @@
 #include "scope.h"
+#include "AST.h"
 #include <string.h>
 #include <stdio.h>
 

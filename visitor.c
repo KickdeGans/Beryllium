@@ -6,6 +6,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "import.h"
+#include "env.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -14,7 +15,7 @@
 visitor_T* init_visitor()
 {
     visitor_T* visitor = calloc(1, sizeof(struct VISITOR_STRUCT));
-    visitor->scope = init_scope();
+    visitor->scope = load_env();
     visitor->prev_statement_value = 1;
 
     return visitor;
@@ -190,12 +191,12 @@ AST_T* visitor_visit_forloop(visitor_T* visitor, AST_T* node)
         variable_definition->variable_definition_value = init_ast(AST_NOOP);
         variable_definition->scope = node->scope;
         if (scope_get_variable_definition(node->scope, variable_definition->variable_definition_variable_name) == (void*) 0)
-            scope_add_variable_definition(node->scope, variable_definition);
+            scope_add_variable_definition(node->statement_definition_body->scope, variable_definition);
         else
             variable_exists = 1;
         for (size_t i = 0; i < (int)value->array_size; i++)
         {
-            scope_set_variable_definition(node->scope, value->array_value[i], variable_definition->variable_definition_variable_name);
+            scope_set_variable_definition(node->statement_definition_body->scope, value->array_value[i], variable_definition->variable_definition_variable_name);
             visitor_visit(visitor, node->statement_definition_body);
         }
         if (!variable_exists)
@@ -209,14 +210,14 @@ AST_T* visitor_visit_forloop(visitor_T* visitor, AST_T* node)
         variable_definition->variable_definition_value = init_ast(AST_NOOP);
         variable_definition->scope = node->scope;
         if (scope_get_variable_definition(node->scope, variable_definition->variable_definition_variable_name) == (void*) 0)
-            scope_add_variable_definition(node->scope, variable_definition);
+            scope_add_variable_definition(node->statement_definition_body->scope, variable_definition);
         else
             variable_exists = 1;
         for (int i = 0; i < (int)value->ast_number; i++)
         {
             AST_T* item = init_ast(AST_NUMBER);
             item->ast_number = i;
-            scope_set_variable_definition(node->scope, item, variable_definition->variable_definition_variable_name);
+            scope_set_variable_definition(node->statement_definition_body->scope, item, variable_definition->variable_definition_variable_name);
             visitor_visit(visitor, node->statement_definition_body);
         }
         if (!variable_exists)
@@ -278,8 +279,15 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
                     else
                         printf("%f", visited_ast->ast_number);
                     break;
+                case AST_BOOLEAN:
+                    switch (visited_ast->boolean_value)
+                    {
+                        case 1: printf("true"); break;
+                        case 0: printf("false"); break;
+                    }
+                    break;
                 case AST_NOOP: printf("null"); break;
-                default: printf("%s", visited_ast->string_value); break;
+                default: break;
             }
         }
         return init_ast(AST_NOOP);
@@ -298,8 +306,15 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
                     else
                         printf("%f\n", visited_ast->ast_number);
                     break;
+                case AST_BOOLEAN:
+                    switch (visited_ast->boolean_value)
+                    {
+                        case 1: printf("true\n"); break;
+                        case 0: printf("false\n"); break;
+                    }
+                    break;
                 case AST_NOOP: printf("null\n"); break;
-                default: printf("%s\n", visited_ast->string_value); break;
+                default: break;
             }
         }
         return init_ast(AST_NOOP);
@@ -328,8 +343,9 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
     if (strcmp(node->function_call_name, "system") == 0)
     {
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
-        system(visited_ast->string_value);
-        return init_ast(AST_NOOP);
+        AST_T* ast = init_ast(AST_NUMBER);
+        ast->ast_number = system(visited_ast->string_value);
+        return ast;
     }
 
     if (strcmp(node->function_call_name, "return") == 0)
@@ -354,8 +370,15 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
                     else
                         printf("%f", visited_ast->ast_number);
                     break;
+                case AST_BOOLEAN:
+                    switch (visited_ast->boolean_value)
+                    {
+                        case 1: printf("true"); break;
+                        case 0: printf("false"); break;
+                    }
+                    break;
                 case AST_NOOP: printf("null"); break;
-                default: printf("%s", visited_ast->string_value); break;
+                default: break;
             }
         }
         scanf("%s", ast->string_value);
@@ -415,22 +438,17 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
     }
 
     AST_T* fdef = scope_get_function_definition(
-        node->scope,
+        visitor->scope,
         node->function_call_name
     );
-
+    
     if (fdef == (void*)0)
     {
-        fdef = scope_get_function_definition(
-            visitor->scope,
-            node->function_call_name
-        );
-        if (fdef == (void*)0)
-        {
-            printf("\nruntime error:\n    undefined method '%s'\n", node->function_call_name);
-            exit(1);
-        }
+        printf("\nruntime error:\n    undefined method '%s'\n", node->function_call_name);
+        exit(1);
     }
+    
+
     if (node->function_call_arguments_size > 0 && fdef->function_definition_args_size > 0)
     {
         for (int i = 0; i < (int) node->function_call_arguments_size; i++)

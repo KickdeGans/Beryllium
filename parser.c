@@ -14,7 +14,6 @@ parser_T* init_parser(lexer_T* lexer)
     parser_T* parser = calloc(1, sizeof(struct PARSER_STRUCT));
     parser->lexer = lexer;
     parser->current_token = lexer_get_next_token(lexer);
-    parser->prev_token = parser->current_token;
     parser->scope = init_scope();
     return parser;
 }
@@ -78,7 +77,6 @@ AST_T* parser_parse_statements(parser_T* parser, scope_T* scope)
             compound->compound_value[compound->compound_size-1] = ast_statement;
         }
     }
-
     return compound;
 }
 
@@ -105,7 +103,7 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
             case TOKEN_LESSTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
             case TOKEN_EGREATERTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
             case TOKEN_ELESSTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
-            case TOKEN_ARRPTR: parser->prev_ast = parser_parse_forloop(parser, scope); break;
+            case TOKEN_LAMBDA: parser->prev_ast = parser_parse_forloop(parser, scope); break;
             case TOKEN_LBRACE: parser->prev_ast = parser_parse_array(parser, scope); break;
             case TOKEN_LBRACKET: parser->prev_ast = parser_parse_array_get_by_index(parser, scope); break;
             case TOKEN_COLON: parser->prev_ast = parser_parse_dict_item(parser, scope); break;
@@ -118,7 +116,9 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
 AST_T* parser_parse_function_call(parser_T* parser, scope_T* scope)
 {
     AST_T* function_call = init_ast(AST_FUNCTION_CALL);
+
     function_call->function_call_name = parser->prev_token->value;
+
     parser_eat(parser, TOKEN_LPAREN);
     function_call->function_call_arguments = calloc(1, sizeof(struct AST_STRUCT*));
     AST_T* ast_expr = parser_parse_expr(parser, scope);
@@ -211,9 +211,8 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
         }
     }
     parser_eat(parser, TOKEN_RPAREN);
-    if (parser->current_token->type == TOKEN_EQUALS)
+    if (parser->current_token->type != TOKEN_LBRACE)
     {
-        parser_eat(parser, TOKEN_EQUALS);
         ast->function_definition_body = parser_parse_statement(parser, scope);
         ast->scope = scope;
         return ast;
@@ -234,10 +233,16 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
     strcpy(ast->statement_definition_type, type);
     if (strcmp(type, "else") == 0)
     {
-        parser_eat(parser, TOKEN_LBRACE);
-        ast->statement_definition_body = parser_parse_statements(parser, scope);
-        parser_eat(parser, TOKEN_RBRACE);
-        parser_eat(parser, TOKEN_SEMI);
+        if (parser->current_token->type != TOKEN_LBRACE)
+        {
+            ast->statement_definition_body = parser_parse_statement(parser, scope);
+        }
+        else
+        {
+            parser_eat(parser, TOKEN_LBRACE);
+            ast->statement_definition_body = parser_parse_statements(parser, scope);
+            parser_eat(parser, TOKEN_RBRACE);
+        }
         ast->scope = scope;
         return ast;
     }
@@ -247,9 +252,16 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
     ast->statement_definition_args_size += 1;
     ast->statement_definition_args[ast->statement_definition_args_size-1] = arg;
     parser_eat(parser, TOKEN_RPAREN);
-    parser_eat(parser, TOKEN_LBRACE);
-    ast->statement_definition_body = parser_parse_statements(parser, scope);
-    parser_eat(parser, TOKEN_RBRACE);
+    if (parser->current_token->type != TOKEN_LBRACE)
+    {
+        ast->statement_definition_body = parser_parse_statement(parser, scope);
+    }
+    else
+    {
+        parser_eat(parser, TOKEN_LBRACE);
+        ast->statement_definition_body = parser_parse_statements(parser, scope);
+        parser_eat(parser, TOKEN_RBRACE);
+    }
     ast->scope = scope;
     return ast;
 }
@@ -267,7 +279,13 @@ AST_T* parser_parse_variable(parser_T* parser, scope_T* scope)
     {
         return parser_parse_function_call(parser, scope);
     }
-
+    if (parser->current_token->type == TOKEN_LBRACE)
+    {
+        parser_eat(parser, TOKEN_LBRACE);
+        AST_T* ast = parser_parse_statements(parser, scope);
+        parser_eat(parser, TOKEN_RBRACE);
+        return ast;
+    }
     AST_T* ast_variable = init_ast(AST_VARIABLE);
     ast_variable->variable_name = token_value;
 
@@ -376,7 +394,7 @@ AST_T* parser_parse_forloop(parser_T* parser, scope_T* scope)
 
     ast_forloop->variable_definition_variable_name = parser->prev_ast->variable_name;
 
-    parser_eat(parser, TOKEN_ARRPTR);
+    parser_eat(parser, TOKEN_LAMBDA);
 
     ast_forloop->forloop_value = parser_parse_expr(parser, scope);
 
@@ -413,7 +431,7 @@ AST_T* parser_parse_dict_item(parser_T* parser, scope_T* scope)
 
     dict_item->dict_key = parser->prev_ast->string_value;
     dict_item->dict_value = parser_parse_expr(parser, scope);
-    dict_item->scope;
+    dict_item->scope = scope;
 
     return dict_item;
 }

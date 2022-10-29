@@ -9,7 +9,6 @@ typedef struct SCOPE_STRUCT
 
     AST_T** variable_definitions;
     size_t variable_definitions_size;
-
 } scope_T;
 
 scope_T* init_scope();

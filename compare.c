@@ -12,6 +12,7 @@ int compare(AST_T* a, AST_T* b)
         case AST_STRING: return !strcmp(a->string_value, b->string_value);
         case AST_NUMBER: return a->ast_number == b->ast_number;
         case AST_BOOLEAN: return a->boolean_value == b->boolean_value;
+        default: break;
     }
     return 0;
 }
