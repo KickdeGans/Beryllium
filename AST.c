@@ -8,6 +8,9 @@ AST_T* init_ast(int type)
   
     ast->scope = (void*) 0;
     ast->private_scope = (void*) 0;
+    ast->is_return_value = 0;
+    ast->break_ = 0;
+    ast->continue_ = 0;
   
     /*  AST_VARIABLE_DEFINITION */
     ast->variable_definition_variable_name = (void*) 0;
@@ -35,6 +38,10 @@ AST_T* init_ast(int type)
     ast->function_call_name = (void*) 0;
     ast->function_call_arguments = (void*) 0;
     ast->function_call_arguments_size = 0;
+
+    /* AST_STATEMENT_CALL */
+    ast->statement_call_type = (void*) 0;
+    ast->statement_call_argument = (void*) 0;
   
     /*  AST_STRING */
     ast->string_value = (void*) 0;

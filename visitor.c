@@ -7,6 +7,7 @@
 #include "parser.h"
 #include "import.h"
 #include "env.h"
+#include "thread.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,6 +37,7 @@ AST_T* visitor_visit(visitor_T* visitor, AST_T* node)
         case AST_VARIABLE_SETTTER: return visitor_visit_variable_setter(visitor, node); break;
         case AST_FUNCTION_RETURN: return visitor_visit(visitor, node); break;
         case AST_FUNCTION_CALL: return visitor_visit_function_call(visitor, node); break;
+        case AST_STATEMENT_CALL: return visitor_visit_statement_call(visitor, node); break;
         case AST_VARIABLE: return visitor_visit_variable(visitor, node); break;
         case AST_STRING: return visitor_visit_string(visitor, node); break;
         case AST_NUMBER: return visitor_visit_string(visitor, node); break;
@@ -147,28 +149,40 @@ AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
     {
         while (visitor_visit_boolean(visitor, node->statement_definition_args[0])->boolean_value == 1)
         {
-            visitor_visit(visitor, node->statement_definition_body);
+            if (visitor_visit(visitor, node->statement_definition_body)->break_)
+            {
+                break;
+            }
         }
     }
     else if (strcmp(node->statement_definition_type, "until") == 0)
     {
         while (visitor_visit_boolean(visitor, node->statement_definition_args[0])->boolean_value == 0)
         {
-            visitor_visit(visitor, node->statement_definition_body);
+            if (visitor_visit(visitor, node->statement_definition_body)->break_)
+            {
+                break;
+            }
         }
     }
     else if (strcmp(node->statement_definition_type, "dowhile") == 0)
     {
         do 
         {
-            visitor_visit(visitor, node->statement_definition_body);
+            if (visitor_visit(visitor, node->statement_definition_body)->break_)
+            {
+                break;
+            }
         } while (visitor_visit_boolean(visitor, node->statement_definition_args[0])->boolean_value == 1);
     }
     else if (strcmp(node->statement_definition_type, "dountil") == 0)
     {
         do 
         {
-            visitor_visit(visitor, node->statement_definition_body);
+            if (visitor_visit(visitor, node->statement_definition_body)->break_)
+            {
+                break;
+            }
         } while (visitor_visit_boolean(visitor, node->statement_definition_args[0])->boolean_value == 0);
     }
     else if (strcmp(node->statement_definition_type, "for") == 0)
@@ -197,7 +211,10 @@ AST_T* visitor_visit_forloop(visitor_T* visitor, AST_T* node)
         for (size_t i = 0; i < (int)value->array_size; i++)
         {
             scope_set_variable_definition(node->statement_definition_body->scope, value->array_value[i], variable_definition->variable_definition_variable_name);
-            visitor_visit(visitor, node->statement_definition_body);
+            if (visitor_visit(visitor, node->statement_definition_body)->break_)
+            {
+                break;
+            }
         }
         if (!variable_exists)
             scope_remove_variable_definition(node->scope, variable_definition->variable_definition_variable_name);
@@ -218,7 +235,10 @@ AST_T* visitor_visit_forloop(visitor_T* visitor, AST_T* node)
             AST_T* item = init_ast(AST_NUMBER);
             item->ast_number = i;
             scope_set_variable_definition(node->statement_definition_body->scope, item, variable_definition->variable_definition_variable_name);
-            visitor_visit(visitor, node->statement_definition_body);
+            if (visitor_visit(visitor, node->statement_definition_body)->break_)
+            {
+                break;
+            }
         }
         if (!variable_exists)
             scope_remove_variable_definition(node->scope, variable_definition->variable_definition_variable_name);
@@ -326,33 +346,34 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
         exit((int) visited_ast->ast_number);
     }
 
-    if (strcmp(node->function_call_name, "file.create") == 0)
+    if (strcmp(node->function_call_name, "file_create") == 0)
     {
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
         io_file_create(visited_ast->string_value);
         return init_ast(AST_NOOP);
     }
     
-    if (strcmp(node->function_call_name, "file.delete") == 0)
+    if (strcmp(node->function_call_name, "file_delete") == 0)
     {
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
         io_file_delete(visited_ast->string_value);
         return init_ast(AST_NOOP);
     }
     
+    if (strcmp(node->function_call_name, "file_read") == 0)
+    {
+        AST_T* visited_ast = visitor_visit(visitor, args[0]);
+        AST_T* ast = init_ast(AST_STRING);
+        ast->string_value = io_file_read(visited_ast->string_value);
+        return ast;
+    }
+
     if (strcmp(node->function_call_name, "system") == 0)
     {
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
         AST_T* ast = init_ast(AST_NUMBER);
         ast->ast_number = system(visited_ast->string_value);
         return ast;
-    }
-
-    if (strcmp(node->function_call_name, "return") == 0)
-    {
-        AST_T* visited_ast = visitor_visit(visitor, args[0]);
-        visited_ast->type = AST_FUNCTION_RETURN;
-        return visited_ast;
     }
 
     if (strcmp(node->function_call_name, "input") == 0)
@@ -409,21 +430,6 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
         visited_ast->ast_number = visited_ast->array_size;
         return visited_ast;
     }
-    if (strcmp(node->function_call_name, "include") == 0)
-    {
-        AST_T* visited_ast = visitor_visit(visitor, args[0]);
-        import(visitor, visited_ast->string_value);
-        return node;
-    }
-    if (strcmp(node->function_call_name, "import") == 0)
-    {
-        AST_T* visited_ast = visitor_visit(visitor, args[0]);
-        char path[255] = "fusion-lib/";
-        strcat(path, visited_ast->string_value);
-        strcat(path, ".fn");
-        import(visitor, path);
-        return node;
-    }
     if (strcmp(node->function_call_name, "free") == 0)
     {
         scope_remove_variable_definition(
@@ -435,6 +441,11 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
             args[0]->variable_name
         );
         return node;
+    }
+    if (strcmp(node->function_call_name, "async") == 0)
+    {
+        async_exec(visitor_visit(visitor, args[0]));
+        return init_ast(AST_NOOP);
     }
 
     AST_T* fdef = scope_get_function_definition(
@@ -464,6 +475,45 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
     }
     
     return visitor_visit(visitor, fdef->function_definition_body);
+}
+
+AST_T* visitor_visit_statement_call(visitor_T* visitor, AST_T* node)
+{
+    if (strcmp(node->statement_call_type, "return") == 0)
+    {
+        AST_T* ast = visitor_visit(visitor, node->statement_call_argument);
+        ast->is_return_value = 1;
+        return ast;
+    }
+    if (strcmp(node->statement_call_type, "include") == 0)
+    {
+        AST_T* ast = visitor_visit(visitor, node->statement_call_argument);
+        import(visitor, ast->string_value);
+        return ast;
+    }
+    if (strcmp(node->statement_call_type, "import") == 0)
+    {
+        printf("import");
+        AST_T* ast = visitor_visit(visitor, node->statement_call_argument);
+        char path[255] = "fusion-lib/";
+        strcat(path, ast->string_value);
+        strcat(path, ".fn");
+        import(visitor, path);
+        return ast;
+    }
+    if (strcmp(node->statement_call_type, "break") == 0)
+    {
+        AST_T* ast = init_ast(AST_NOOP);
+        ast->break_ = 1;
+        return ast;
+    }
+    if (strcmp(node->statement_call_type, "continue") == 0)
+    {
+        AST_T* ast = init_ast(AST_NOOP);
+        ast->continue_ = 1;
+        return ast;
+    }
+    return node;
 }
 
 AST_T* visitor_visit_dict_item(visitor_T* visitor, AST_T* node)
@@ -541,7 +591,12 @@ AST_T* visitor_visit_compound(visitor_T* visitor, AST_T* node)
     for (int i = 0; i < node->compound_size; i++)
     {
         AST_T* v = visitor_visit(visitor, node->compound_value[i]);
-        if (v->type == AST_FUNCTION_RETURN)
+        if (v->is_return_value)
+        {
+            v->is_return_value = 0;
+            return v;
+        }
+        if (v->break_ || v->continue_)
         {
             return v;
         }

@@ -17,7 +17,7 @@ else
     git clone "https://github.com/KickdeGans/Fusion" > /dev/null 2>&1
 fi
 echo "Compiling source..."
-gcc Fusion/*.c Fusion/lib/*.c -o fusion > /dev/null 2>&1
+gcc -o3 Fusion/*.c Fusion/lib/*.c -o fusion > /dev/null 2>&1
 cp fusion /bin/fusion
 echo "Cleaning up..."
 rm -rf Fusion

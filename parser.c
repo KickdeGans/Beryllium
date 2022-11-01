@@ -140,14 +140,29 @@ AST_T* parser_parse_function_call(parser_T* parser, scope_T* scope)
     return function_call;
 }
 
+AST_T* parser_parse_statement_call(parser_T* parser, scope_T* scope)
+{
+    AST_T* statement_call = init_ast(AST_STATEMENT_CALL);
+
+    statement_call->statement_call_type = parser->current_token->value;
+    
+    parser_eat(parser, TOKEN_ID);
+
+    if (strcmp(statement_call->statement_call_type, "break") == 0 ||
+        strcmp(statement_call->statement_call_type, "continue") == 0)
+    {
+        return statement_call;
+    }
+
+    statement_call->statement_call_argument = parser_parse_expr(parser, scope);
+
+    return statement_call;
+}
+
 AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
 {
     int is_public = !strcmp(parser->current_token->value, "public");
-    int is_const = 0;
-    if (strcmp(parser->current_token->value, "const") == 0)
-    {
-        is_const = 1;
-    }
+    int is_const = !strcmp(parser->current_token->value, "const");
     parser_eat(parser, TOKEN_ID);
     if (strcmp(parser->current_token->value, "const") == 0)
     {
@@ -449,15 +464,23 @@ AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
         return parser_parse_function_definition(parser, scope);
     }
     else if (strcmp(parser->current_token->value, "if") == 0 ||
-        strcmp(parser->current_token->value, "else") == 0 ||
-        strcmp(parser->current_token->value, "elseif") == 0 ||
-        strcmp(parser->current_token->value, "while") == 0 ||
-        strcmp(parser->current_token->value, "until") == 0 ||
-        strcmp(parser->current_token->value, "dowhile") == 0 ||
-        strcmp(parser->current_token->value, "dountil") == 0 ||
-        strcmp(parser->current_token->value, "for") == 0)
+             strcmp(parser->current_token->value, "else") == 0 ||
+             strcmp(parser->current_token->value, "elseif") == 0 ||
+             strcmp(parser->current_token->value, "while") == 0 ||
+             strcmp(parser->current_token->value, "until") == 0 ||
+             strcmp(parser->current_token->value, "dowhile") == 0 ||
+             strcmp(parser->current_token->value, "dountil") == 0 ||
+             strcmp(parser->current_token->value, "for") == 0)
     {
         return parser_parse_statement_definition(parser, scope);
+    }
+    else if (strcmp(parser->current_token->value, "return") == 0||
+             strcmp(parser->current_token->value, "break") == 0||
+             strcmp(parser->current_token->value, "continue") == 0||
+             strcmp(parser->current_token->value, "import") == 0||
+             strcmp(parser->current_token->value, "include") == 0)
+    {
+        return parser_parse_statement_call(parser, scope);
     }
     else
     {

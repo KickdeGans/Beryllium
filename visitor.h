@@ -29,6 +29,8 @@ AST_T* visitor_visit_variable(visitor_T* visitor, AST_T* node);
 
 AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node);
 
+AST_T* visitor_visit_statement_call(visitor_T* visitor, AST_T* node);
+
 AST_T* visitor_visit_string(visitor_T* visitor, AST_T* node);
 
 AST_T* visitor_visit_boolean(visitor_T* visitor, AST_T* node);

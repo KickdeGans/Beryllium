@@ -12,6 +12,7 @@ typedef struct AST_STRUCT
         AST_VARIABLE_SETTTER,
         AST_VARIABLE,
         AST_FUNCTION_CALL,
+        AST_STATEMENT_CALL,
         AST_STRING,
         AST_BOOLEAN,
         AST_NUMBER,
@@ -21,7 +22,7 @@ typedef struct AST_STRUCT
         AST_NOOP,
         AST_ARRAY,
         AST_GET_ARRAY_ITEM_BY_INDEX,
-        AST_DICT_ITEM,
+        AST_DICT_ITEM
     } type;
 
     enum {
@@ -35,6 +36,9 @@ typedef struct AST_STRUCT
 
     struct SCOPE_STRUCT* scope;
     struct SCOPE_STRUCT* private_scope;
+    int is_return_value;
+    int break_;
+    int continue_;
 
     /* AST_VARIABLE_DEFINITION */
     char* variable_definition_variable_name;
@@ -62,6 +66,10 @@ typedef struct AST_STRUCT
     char* function_call_name;
     struct AST_STRUCT** function_call_arguments;
     size_t function_call_arguments_size;
+
+    /* AST_STATEMENT_CALL */
+    char* statement_call_type;
+    struct AST_STRUCT* statement_call_argument;
 
     /* AST_STRING */
     char* string_value;
