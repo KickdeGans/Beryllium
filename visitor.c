@@ -45,6 +45,7 @@ AST_T* visitor_visit(visitor_T* visitor, AST_T* node)
         case AST_ARRAY: return visitor_visit_array(visitor, node); break;
         case AST_GET_ARRAY_ITEM_BY_INDEX: return visitor_visit_get_array_by_index(visitor, node); break;
         case AST_DICT_ITEM: return visitor_visit_dict_item(visitor, node); break;
+        case AST_MATH_EXPR: return visitor_visit_math_expr(visitor, node); break;
         case AST_NOOP: return node; break;
         default: break;
     }
@@ -584,6 +585,25 @@ AST_T* visitor_visit_variable_setter(visitor_T* visitor, AST_T* node)
     );
 
     return init_ast(AST_NOOP);
+}
+
+AST_T* visitor_visit_math_expr(visitor_T* visitor, AST_T* node)
+{
+    AST_T* ast = init_ast(AST_NUMBER);
+    ast->ast_number = visitor_visit(visitor, node->math_expression[0]->math_expression_value)->ast_number;
+    for (int i = 1; i < node->math_expression_size; i++)
+    {
+        double value = visitor_visit(visitor, node->math_expression[i]->math_expression_value)->ast_number;
+        switch (node->math_expression[i]->math_expression_type)
+        {
+            case '+': ast->ast_number += value; break;
+            case '-': ast->ast_number -= value; break;
+            case '/': ast->ast_number /= value; break;
+            case '*': ast->ast_number *= value; break;
+        }
+    }
+    ast->scope = node->scope;
+    return ast;
 }
 
 AST_T* visitor_visit_compound(visitor_T* visitor, AST_T* node)

@@ -70,5 +70,15 @@ AST_T* init_ast(int type)
     ast->array_value = (void*) 0;
     ast->array_size = 0;
 
+    /* AST_DICT_ITEM */
+    ast->dict_key = (void*) 0;
+    ast->dict_value = (void*) 0;
+
+    /* AST_MATH_EXPR */
+    ast->math_expression = (void*) 0;
+    ast->math_expression_size = 0;
+    ast->math_expression_type = (void*) 0;
+    ast->math_expression_value = (void*) 0;
+
     return ast;
 }

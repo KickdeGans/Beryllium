@@ -106,11 +106,60 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
             case TOKEN_LAMBDA: parser->prev_ast = parser_parse_forloop(parser, scope); break;
             case TOKEN_LBRACE: parser->prev_ast = parser_parse_array(parser, scope); break;
             case TOKEN_LBRACKET: parser->prev_ast = parser_parse_array_get_by_index(parser, scope); break;
+            case TOKEN_LPAREN: parser->prev_ast = parser_parse_paren_expr(parser, scope); break;
             case TOKEN_COLON: parser->prev_ast = parser_parse_dict_item(parser, scope); break;
+            case TOKEN_PLUS: parser->prev_ast = parser_parse_math_expr(parser, scope); break;
+            case TOKEN_MINUS: parser->prev_ast = parser_parse_math_expr(parser, scope); break;
+            case TOKEN_SLASH: parser->prev_ast = parser_parse_math_expr(parser, scope); break;
+            case TOKEN_STAR: parser->prev_ast = parser_parse_math_expr(parser, scope); break;
             default: break;
         }
     }
     return parser->prev_ast;
+}
+
+AST_T* parser_parse_paren_expr(parser_T* parser, scope_T* scope)
+{
+    parser_eat(parser, TOKEN_LPAREN);
+
+    AST_T* ast = parser_parse_expr(parser, scope);
+
+    parser_eat(parser, TOKEN_RPAREN);
+    
+    return ast;
+}
+
+AST_T* parser_parse_math_expr(parser_T* parser, scope_T* scope)
+{
+    AST_T* math_expr = init_ast(AST_MATH_EXPR);
+    math_expr->math_expression = calloc(1, sizeof(struct AST_STRUCT*));
+    math_expr->math_expression[0] = init_ast(AST_NOOP);
+    math_expr->math_expression[0]->math_expression_value = parser->prev_ast;
+    math_expr->math_expression_size += 1;
+    while (parser->current_token->type == TOKEN_PLUS ||
+           parser->current_token->type == TOKEN_MINUS ||
+           parser->current_token->type == TOKEN_SLASH ||
+           parser->current_token->type == TOKEN_STAR)
+    {
+        math_expr->math_expression_size += 1;
+        math_expr->math_expression = realloc(
+            math_expr->math_expression, 
+            math_expr->math_expression_size * sizeof(struct AST_STRUCT*)
+        );
+        math_expr->math_expression[math_expr->math_expression_size-1] = init_ast(AST_NOOP);
+        math_expr->math_expression[math_expr->math_expression_size-1]->math_expression_type = parser->current_token->value[0];
+        switch (parser->current_token->type)
+        {
+            case TOKEN_PLUS: parser_eat(parser, TOKEN_PLUS); break;
+            case TOKEN_MINUS: parser_eat(parser, TOKEN_MINUS); break;
+            case TOKEN_SLASH: parser_eat(parser, TOKEN_SLASH); break;
+            case TOKEN_STAR: parser_eat(parser, TOKEN_STAR); break;
+            default: printf("compilation error:\n   unknown math operator '%s'", parser->current_token->value); exit(1); break;
+        }
+        math_expr->math_expression[math_expr->math_expression_size-1]->math_expression_value = parser_parse_expr(parser, scope);
+    }
+    math_expr->scope = scope;
+    return math_expr;
 }
 
 AST_T* parser_parse_function_call(parser_T* parser, scope_T* scope)
@@ -329,7 +378,6 @@ AST_T* parser_parse_array(parser_T* parser, scope_T* scope)
     ast_array->array_value = calloc(1, sizeof(struct AST_STRUCT*));
     ast_array->array_value[0] = parser_parse_expr(parser, scope);
     ast_array->array_size += 1;
-    int type = ast_array->array_value[0]->type;
     while (parser->current_token->type != TOKEN_RBRACE)
     {
         parser_eat(parser, TOKEN_COMMA);
@@ -339,11 +387,6 @@ AST_T* parser_parse_array(parser_T* parser, scope_T* scope)
             ast_array->array_size * sizeof(struct AST_STRUCT*)
         );
         ast_array->array_value[ast_array->array_size-1] = parser_parse_expr(parser, scope);
-        if (ast_array->array_value[ast_array->array_size-1]->type != type)
-        {
-            printf("\ncompilation error:\n    valueError\n");
-            exit(1);
-        }
     }
     parser_eat(parser, TOKEN_RBRACE);
     ast_array->scope = scope;

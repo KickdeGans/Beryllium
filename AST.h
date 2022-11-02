@@ -22,7 +22,8 @@ typedef struct AST_STRUCT
         AST_NOOP,
         AST_ARRAY,
         AST_GET_ARRAY_ITEM_BY_INDEX,
-        AST_DICT_ITEM
+        AST_DICT_ITEM,
+        AST_MATH_EXPR
     } type;
 
     enum {
@@ -106,6 +107,13 @@ typedef struct AST_STRUCT
     /* AST_DICT_ITEM */
     char* dict_key;
     struct AST_STRUCT* dict_value;
+
+    /* AST_MATH_EXPR */
+    struct AST_STRUCT** math_expression;
+    size_t math_expression_size;
+    struct AST_STRUCT* math_expression_value;
+    char math_expression_type;
+
 } AST_T;
 
 AST_T* init_ast(int type);

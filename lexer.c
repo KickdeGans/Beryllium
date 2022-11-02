@@ -40,11 +40,13 @@ void lexer_skip_whitespace(lexer_T* lexer)
 
 void lexer_skip_comment(lexer_T* lexer)
 {
-    lexer_advance(lexer);
-    while (lexer->c != '\n' || lexer-> c != EOF || lexer->c != '#' || lexer->c != '\0')
+    while (1)
     {
-        printf("%c", lexer->c);   
         lexer_advance(lexer);
+        if (lexer->c == '*' && lexer_next_token(lexer) == '/')
+        {
+            break;
+        }
     }
 }
 
@@ -65,9 +67,13 @@ token_T* lexer_get_next_token(lexer_T* lexer)
         {
             lexer_skip_whitespace(lexer);
         }
-        if (lexer->c == '#' || lexer->c == 35)
+        if (lexer->c == '/' || lexer->c == 47)
         {
-            lexer_skip_comment(lexer);
+            lexer_advance(lexer);
+            if (lexer->c == '*' || lexer->c == 42)
+            {
+                lexer_skip_comment(lexer);
+            }
         }
         if (isdigit(lexer->c))
         {
@@ -130,6 +136,10 @@ token_T* lexer_get_next_token(lexer_T* lexer)
                 {
                     case '|': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_OR, lexer_get_current_doubletok_as_string(lexer))); 
                 }
+            case '+': return lexer_advance_with_token(lexer, init_token(TOKEN_PLUS, lexer_get_current_char_as_string(lexer))); break;
+            case '-': return lexer_advance_with_token(lexer, init_token(TOKEN_MINUS, lexer_get_current_char_as_string(lexer))); break;
+            case '/': return lexer_advance_with_token(lexer, init_token(TOKEN_SLASH, lexer_get_current_char_as_string(lexer))); break;
+            case '*': return lexer_advance_with_token(lexer, init_token(TOKEN_STAR, lexer_get_current_char_as_string(lexer))); break;
         }
     }
     return init_token(TOKEN_EOF, "\0");

@@ -41,4 +41,6 @@ AST_T* visitor_visit_variable_setter(visitor_T* visitor, AST_T* node);
 
 AST_T* visitor_visit_dict_item(visitor_T* visitor, AST_T* node);
 
+AST_T* visitor_visit_math_expr(visitor_T* visitor, AST_T* node);
+
 #endif

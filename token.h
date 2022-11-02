@@ -29,7 +29,11 @@ typedef struct TOKEN_STRUCT
         TOKEN_AND,
         TOKEN_OR,
         TOKEN_NUMBER,
-        TOKEN_COLON
+        TOKEN_COLON,
+        TOKEN_PLUS,
+        TOKEN_MINUS,
+        TOKEN_SLASH,
+        TOKEN_STAR
     } type;
 
     char* value;
