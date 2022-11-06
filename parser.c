@@ -31,7 +31,7 @@ void parser_eat(parser_T* parser, int token_type)
     }
     else
     {
-        printf("\ncompilation error:\n    unexpected token '%s' at line %d. expected '%s'\n", parser->current_token->value, parser->lexer->current_line, token_get_token_name_from_type(token_type));
+        printf("\ncompilation error:\n    unexpected token %s at line %d. expected '%s'\n", parser->current_token->value, parser->lexer->current_line, token_get_token_name_from_type(token_type));
         exit(1);
     }
 }
@@ -210,13 +210,43 @@ AST_T* parser_parse_statement_call(parser_T* parser, scope_T* scope)
 
 AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
 {
-    int is_public = !strcmp(parser->current_token->value, "public");
-    int is_const = !strcmp(parser->current_token->value, "const");
-    parser_eat(parser, TOKEN_ID);
+    int is_public = 0;
+    int is_const = 0;
+    int type;
+    if (strcmp(parser->current_token->value, "public") == 0)
+    {
+        is_public = 1;
+        parser_eat(parser, TOKEN_ID);
+    }
     if (strcmp(parser->current_token->value, "const") == 0)
     {
-        parser_eat(parser, TOKEN_ID);
         is_const = 1;
+        parser_eat(parser, TOKEN_ID);
+    }
+    if (strcmp(parser->current_token->value, "int") == 0)
+    {
+        type = AST_INT;
+        parser_eat(parser, TOKEN_ID);
+    }
+    else if (strcmp(parser->current_token->value, "double") == 0)
+    {
+        type = AST_DOUBLE;
+        parser_eat(parser, TOKEN_ID);
+    }
+    else if (strcmp(parser->current_token->value, "bool") == 0)
+    {
+        type = AST_BOOLEAN;
+        parser_eat(parser, TOKEN_ID);
+    }
+    else if (strcmp(parser->current_token->value, "string") == 0)
+    {
+        type = AST_STRING;
+        parser_eat(parser, TOKEN_ID);
+    }
+    else if (strcmp(parser->current_token->value, "var") == 0)
+    {
+        type = AST_NOOP;
+        parser_eat(parser, TOKEN_ID);
     }
     char* variable_definition_variable_name = parser->current_token->value;
     if (!is_valid_name(variable_definition_variable_name))
@@ -240,6 +270,7 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
     variable_definition->variable_definition_is_public = is_public;
     variable_definition->variable_definition_is_const = is_const;
     variable_definition->variable_definition_value = variable_definition_value;
+    variable_definition->variable_definition_value_type = type;
     variable_definition->scope = scope;
     return variable_definition;
 }
@@ -327,6 +358,38 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
         parser_eat(parser, TOKEN_RBRACE);
     }
     ast->scope = scope;
+    return ast;
+}
+
+AST_T* parse_parse_struct_definition(parser_T* parser, scope_T* scope)
+{
+    AST_T* ast = init_ast(AST_STRUCT_DEFINITION);
+    
+    parser_eat(parser, TOKEN_ID);
+
+    ast->struct_definition_name = parser->current_token->value;
+
+    parser_eat(parser, TOKEN_ID);
+    parser_eat(parser, TOKEN_LBRACE);
+
+    ast->struct_definition_content = calloc(1, sizeof(struct AST_STRUCT*));
+    ast->struct_definition_content_size += 1;
+    ast->struct_definition_content[0] = parser_parse_variable_definition(parser, scope);
+
+    while (parser->current_token->type != TOKEN_RBRACE)
+    {
+        ast->struct_definition_content = realloc(
+            ast->struct_definition_content, 
+            ast->struct_definition_content_size * sizeof(struct AST_STRUCT*)
+        );
+        ast->struct_definition_content_size += 1;
+        ast->struct_definition_content[ast->struct_definition_content_size-1] = parser_parse_variable_definition(parser, scope);
+
+        parser_eat(parser, TOKEN_SEMI);
+    }
+
+    parser_eat(parser, TOKEN_RBRACE);
+
     return ast;
 }
 
@@ -437,13 +500,22 @@ AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope)
 
 AST_T* parser_parse_number(parser_T* parser, scope_T* scope)
 {
-    AST_T* ast_number = init_ast(AST_NUMBER);
+    if (((int)strtod(parser->current_token->value, NULL)) == strtod(parser->current_token->value, NULL))
+    {
+        AST_T* ast_number = init_ast(AST_INT);
+        ast_number->ast_int = atoi(parser->current_token->value);
+        parser_eat(parser, TOKEN_NUMBER);
+        return ast_number;
+    }
+    else
+    {
+        AST_T* ast_number = init_ast(AST_DOUBLE);
+        ast_number->ast_double = strtod(parser->current_token->value, NULL);
+        parser_eat(parser, TOKEN_NUMBER);
+        return ast_number;
+    }
 
-    ast_number->ast_number = strtod(parser->current_token->value, NULL);
-    parser_eat(parser, TOKEN_NUMBER);
-
-    ast_number->scope = scope;
-    return ast_number;
+    return init_ast(AST_NOOP);
 }
 
 AST_T* parser_parse_forloop(parser_T* parser, scope_T* scope)
@@ -497,6 +569,10 @@ AST_T* parser_parse_dict_item(parser_T* parser, scope_T* scope)
 AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
 {
     if (strcmp(parser->current_token->value, "var") == 0 ||
+        strcmp(parser->current_token->value, "string") == 0 ||
+        strcmp(parser->current_token->value, "int") == 0 ||
+        strcmp(parser->current_token->value, "double") == 0 ||
+        strcmp(parser->current_token->value, "bool") == 0 ||
         strcmp(parser->current_token->value, "public") == 0 ||
         strcmp(parser->current_token->value, "const") == 0)
     {
@@ -524,6 +600,10 @@ AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
              strcmp(parser->current_token->value, "include") == 0)
     {
         return parser_parse_statement_call(parser, scope);
+    }
+    else if (strcmp(parser->current_token->value, "struct") == 0)
+    {
+        return parse_parse_struct_definition(parser, scope);
     }
     else
     {

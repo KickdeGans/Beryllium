@@ -30,6 +30,11 @@ AST_T* init_ast(int type)
     ast->statement_definition_args = (void*) 0;
     ast->statement_definition_args_size = 0;
 
+    /* AST_STRUCT_DEFINITION */
+    ast->struct_definition_name = (void*) 0;
+    ast->struct_definition_content = (void*) 0;
+    ast->struct_definition_content_size = (void*) 0;
+
     /*  AST_VARIABLE */
     ast->variable_name = (void*) 0;
     ast->statement_value = (void*) 0;
@@ -52,8 +57,11 @@ AST_T* init_ast(int type)
     ast->boolean_type = 0;
     ast->boolean_value = 0;
 
-    /* AST_NUMBER */
-    ast->ast_number = 0;
+    /* AST_INT */
+    ast->ast_int = 0;
+
+    /* AST_DOUBLE */
+    ast->ast_double = 0;
 
     /* AST_VARIABLE_SETTER */
     ast->variable_setter_variable_name = (void*) 0;
@@ -77,7 +85,7 @@ AST_T* init_ast(int type)
     /* AST_MATH_EXPR */
     ast->math_expression = (void*) 0;
     ast->math_expression_size = 0;
-    ast->math_expression_type = (void*) 0;
+    ast->math_expression_type = 0;
     ast->math_expression_value = (void*) 0;
 
     return ast;

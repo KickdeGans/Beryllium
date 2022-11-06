@@ -8,6 +8,7 @@ typedef struct AST_STRUCT
         AST_VARIABLE_DEFINITION,
         AST_FUNCTION_DEFINITION,
         AST_STATEMENT_DEFINITION,
+        AST_STRUCT_DEFINITION,
         AST_CLASS_DEFINITION,
         AST_VARIABLE_SETTTER,
         AST_VARIABLE,
@@ -15,7 +16,8 @@ typedef struct AST_STRUCT
         AST_STATEMENT_CALL,
         AST_STRING,
         AST_BOOLEAN,
-        AST_NUMBER,
+        AST_INT,
+        AST_DOUBLE,
         AST_FORLOOP,
         AST_FUNCTION_RETURN,
         AST_COMPOUND,
@@ -46,6 +48,7 @@ typedef struct AST_STRUCT
     struct AST_STRUCT* variable_definition_value;
     int variable_definition_is_public;
     int variable_definition_is_const;
+    int variable_definition_value_type;
 
     /* AST_FUNCTION_DEFINITION */
     struct AST_STRUCT* function_definition_body;
@@ -58,6 +61,11 @@ typedef struct AST_STRUCT
     char* statement_definition_type;
     struct AST_STRUCT** statement_definition_args;
     size_t statement_definition_args_size;
+
+    /* AST_STRUCT_DEFINITION */
+    char* struct_definition_name;
+    struct AST_STRUCT** struct_definition_content;
+    size_t struct_definition_content_size;
 
     /* AST_VARIABLE */
     char* variable_name;
@@ -78,11 +86,15 @@ typedef struct AST_STRUCT
     /* AST_BOOLEAN */
     struct AST_STRUCT* boolean_variable_a;
     struct AST_STRUCT* boolean_variable_b;
+    struct AST_STRUCT** boolean_expr;
     int boolean_operator;
     int boolean_value;
 
-    /* AST_NUMBER */
-    double ast_number;
+    /* AST_INT */
+    int ast_int;
+
+    /* AST_DOUBLE */
+    double ast_double;
 
     /* AST_FORLOOP */
     char* forloop_variable_name;
