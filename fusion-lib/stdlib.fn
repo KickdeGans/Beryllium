@@ -1,0 +1,7 @@
+define sizeof(x)
+{
+    int length = 0;
+    for (i => x)
+        length = length + 1;
+    return length;
+};

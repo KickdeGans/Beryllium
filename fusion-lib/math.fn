@@ -1,6 +1,17 @@
 public const double math_pi = 3.14159265358;
 
-define octets_to_srgb(red, green, blue) 
+define octets_to_srgb(red, green, blue) return blue + green + (green * 255) + (red * 65536);
+define interpolate(a, b)
 {
-    return blue + green + (green * 255) + (red * 65536);
+    double diff = abs(a - b);
+    return a/2 + diff;
+    return b/2 + diff;
+};
+define is_even(x) return x % 2 == 0;
+define absolute(x)
+{
+    if (x >= 0) 
+        return x; 
+    else 
+        return x - (x * 2);
 };

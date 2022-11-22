@@ -1,5 +1,7 @@
 install:
-	gcc -Ofast -lm *.c lib/*.c -o fusion
+	gcc -Ofast -lm src/*.c src/lib/*.c -o fusion
 	cp fusion /bin/fusion
-	rm -rf Fusion
-	rm -r ./fusion
+	cp -r fusion-lib /bin/fusion-lib
+clean:
+	sudo rm fusion
+	sudo rm -rf fusion-lib

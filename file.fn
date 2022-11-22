@@ -1,2 +1,3 @@
-public const double pi = 3.1415926535;
-println(pi);
+import "math";
+
+println(absolute(-5));
