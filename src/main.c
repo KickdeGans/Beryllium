@@ -7,8 +7,17 @@
 #include "visitor.h"
 #include "lib/io.h"
 
-void fusion_clean(struct LEXER_STRUCT* lexer, struct PARSER_STRUCT* parser, struct AST_STRUCT* root, struct VISITOR_STRUCT* visitor)
+/* Load file to run */
+void run(char* filepath)
 {
+    lexer_T* lexer = init_lexer(io_file_read(filepath));
+    parser_T* parser = init_parser(lexer);
+    AST_T* root = parser_parse(parser, parser->scope);
+    visitor_T* visitor = init_visitor();
+
+    visitor_visit(visitor, root);
+
+
     free(lexer);
     free(parser);
     ast_free(root);
@@ -17,18 +26,7 @@ void fusion_clean(struct LEXER_STRUCT* lexer, struct PARSER_STRUCT* parser, stru
     return;
 }
 
-void run(char* filepath)
-{
-    lexer_T* lexer = init_lexer(io_file_read(filepath));
-    parser_T* parser = init_parser(lexer);
-    AST_T* root = parser_parse(parser, parser->scope);
-    visitor_T* visitor = init_visitor();
-    
-    visitor_visit(visitor, root);
-
-    fusion_clean(lexer, parser, root, visitor);
-}
-
+/* Main function */
 int main(int argc, char* argv[])
 {
     if (strcmp(argv[argc - 1], "--verify") == 0)

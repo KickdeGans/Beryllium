@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
+/* Initiate a token */
 token_T* init_token(int type, char* value)
 {
     token_T* token = calloc(1, sizeof(struct TOKEN_STRUCT));
@@ -12,6 +12,7 @@ token_T* init_token(int type, char* value)
     return token;
 }
 
+/* Get token name and or value from type */
 char* token_get_token_name_from_type(int type)
 {
     switch (type)
@@ -37,7 +38,7 @@ char* token_get_token_name_from_type(int type)
         case TOKEN_ELESSTHAN: return "<=";
         case TOKEN_EXCLAMATION: return "!";
         case TOKEN_QUESTION: return "?";
-        case TOKEN_LAMBDA: return "=>";
+        case TOKEN_LAMDA: return "=>";
         case TOKEN_AND: return "&&";
         case TOKEN_OR: return "||";
         case TOKEN_NUMBER: return "number value";

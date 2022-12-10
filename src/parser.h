@@ -12,6 +12,7 @@ typedef struct PARSER_STRUCT
     token_T* prev_token;
     scope_T* scope;
     AST_T* prev_ast;
+    int opened_braces;
 } parser_T;
 
 parser_T* init_parser(lexer_T* lexer);
@@ -25,6 +26,8 @@ AST_T* parser_parse_statement(parser_T* parser, scope_T* scope);
 AST_T* parser_parse_statements(parser_T* parser, scope_T* scope);
 
 AST_T* parser_parse_expr(parser_T* parser, scope_T* scope);
+
+AST_T* parser_parse_attribute(parser_T* parser, scope_T* scope);
 
 AST_T* parser_parse_paren_expr(parser_T* parser, scope_T* scope);
 

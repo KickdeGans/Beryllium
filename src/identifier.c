@@ -11,30 +11,34 @@ char allowed_chars[] =
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_', '.'
 };
 
-int is_valid_name(char* name)
+/* Check if a identifier name is valid */
+/* Returns 0 if not */
+/* Returns 1 if it is */
+int is_valid_name(const char* name)
 {
     if (digits_only(name))
     {
         return 0;
     }
     int valid = 1;
-    for (int i = 0; i < sizeof(name); i++)
+    for (size_t i = 0; i < sizeof(name); i++)
     {
-        for (int j = 0; j < sizeof(allowed_chars); j++)
+        for (size_t j = 0; j < sizeof(allowed_chars); j++)
         {
-            if (allowed_chars[j] == name[i])
+            if (name[i] == allowed_chars[j])
             {
                 valid = 1;
-                break;
             }
         }
     }
     return valid;
 }
-int is_allowed_char(char ch)
+
+/* Determines if a character is allowed for a name */
+int is_allowed_char(const char ch)
 {
     int valid = 0;
-    for (int i = 0; i < sizeof(allowed_chars); i++)
+    for (size_t i = 0; i < sizeof(allowed_chars); i++)
     {
         if (ch == allowed_chars[i])
         {
@@ -45,6 +49,7 @@ int is_allowed_char(char ch)
     return valid;
 }
 
+/* Checks if a string contains only digits */
 int digits_only(const char *s)
 {
     while (*s) 

@@ -1,4 +1,4 @@
-define init_thread()
+fn init_thread()
 {
     
 };

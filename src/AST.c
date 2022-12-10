@@ -1,11 +1,11 @@
 #include "AST.h"
 
-
+/* Initiate Abstract Syntax Tree */
 AST_T* init_ast(int type)
 {
     AST_T* ast = calloc(1, sizeof(struct AST_STRUCT));
+    
     ast->type = type;
-  
     ast->scope = (void*) 0;
     ast->private_scope = (void*) 0;
     ast->is_return_value = 0;
@@ -15,8 +15,10 @@ AST_T* init_ast(int type)
     /*  AST_VARIABLE_DEFINITION */
     ast->variable_definition_variable_name = (void*) 0;
     ast->variable_definition_value = (void*) 0;
-    ast->variable_definition_is_public = -1;
+    ast->variable_definition_value_type = AST_NOOP;
+    ast->variable_definition_is_public = 0;
     ast->variable_definition_is_const = 0;
+    ast->variable_definition_is_weak = 0;
   
     /*  AST_FUNCTION_DEFINITION */
     ast->function_definition_body = (void*) 0;
@@ -93,6 +95,13 @@ AST_T* init_ast(int type)
     ast->math_expression_size = 0;
     ast->math_expression_type = 0;
     ast->math_expression_value = (void*) 0;
+
+    /* AST_ATTRIBUTE */
+    ast->attribute_source = (void*) 0;
+    ast->attribute_modifier = (void*) 0;
+
+    /* AST_STREAM */
+    ast->stream = (void*) 0;
 
     return ast;
 }

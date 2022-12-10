@@ -13,6 +13,8 @@ visitor_T* init_visitor();
 
 AST_T* visitor_visit(visitor_T* visitor, AST_T* node);
 
+AST_T* visitor_visit_attribute(visitor_T* visitor, AST_T* node);
+
 AST_T* visitor_visit_variable_definition(visitor_T* visitor, AST_T* node);
 
 AST_T* visitor_visit_function_definition(visitor_T* visitor, AST_T* node);
@@ -42,5 +44,7 @@ AST_T* visitor_visit_variable_setter(visitor_T* visitor, AST_T* node);
 AST_T* visitor_visit_dict_item(visitor_T* visitor, AST_T* node);
 
 AST_T* visitor_visit_math_expr(visitor_T* visitor, AST_T* node);
+
+int visitor_evaluate_boolean(visitor_T* visitor, AST_T* node);
 
 #endif

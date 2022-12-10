@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "AST.h"
 
+/* Compare two values of the same type */
 int compare(AST_T* a, AST_T* b)
 {
     if (a->type != b->type)

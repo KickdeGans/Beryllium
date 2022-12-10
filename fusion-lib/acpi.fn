@@ -1,0 +1,10 @@
+fn is_linux()
+{
+    int value = 0;
+    if (system("uname -r > nul") == 0)
+    {
+        file_delete("nul");
+        value = 1;
+    };
+    return value;
+};

@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include <stdio.h>
 
-
+/* Initiate lexer */
 lexer_T* init_lexer(char* contents)
 {
     lexer_T* lexer = calloc(1, sizeof(struct LEXER_STRUCT));
@@ -20,6 +20,7 @@ lexer_T* init_lexer(char* contents)
     return lexer;
 }
 
+/* Get character from file */
 void lexer_advance(lexer_T* lexer)
 {
     if (lexer->c != '\0' && lexer->i < strlen(lexer->contents))
@@ -30,6 +31,10 @@ void lexer_advance(lexer_T* lexer)
     }
 }
 
+/* Skip whitespace */
+/* Example */
+/* Input: if (a == b) {} */
+/* Output: if(a==b){} */
 void lexer_skip_whitespace(lexer_T* lexer)
 {
     while (lexer->c == ' ' || lexer->c == 10)
@@ -38,23 +43,23 @@ void lexer_skip_whitespace(lexer_T* lexer)
     }
 }
 
+/* Skip comment */
 void lexer_skip_comment(lexer_T* lexer)
 {
-    while (1)
+    while (lexer->c != '#')
     {
         lexer_advance(lexer);
-        if (lexer->c == '*' && lexer_next_token(lexer) == '/')
-        {
-            break;
-        }
     }
 }
 
+/* Get next char from file */
 char lexer_next_token(lexer_T* lexer)
 {
     return lexer->contents[lexer->i + 1];
 }
 
+/* Get next token */
+/* Used by parser_eat() */
 token_T* lexer_get_next_token(lexer_T* lexer)
 {
     while (lexer->c != '\0' && lexer->i < strlen(lexer->contents))
@@ -67,13 +72,9 @@ token_T* lexer_get_next_token(lexer_T* lexer)
         {
             lexer_skip_whitespace(lexer);
         }
-        if (lexer->c == '/' || lexer->c == 47)
+        if (lexer->c == '#' || lexer->c == 35)
         {
-            lexer_advance(lexer);
-            if (lexer->c == '*' || lexer->c == 42)
-            {
-                lexer_skip_comment(lexer);
-            }
+            lexer_skip_comment(lexer);
         }
         if (isdigit(lexer->c))
         {
@@ -94,7 +95,7 @@ token_T* lexer_get_next_token(lexer_T* lexer)
                 switch (next_token)
                 {
                     case '=': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_EQUALTO, lexer_get_current_doubletok_as_string(lexer))); 
-                    case '>': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_LAMBDA, lexer_get_current_doubletok_as_string(lexer))); 
+                    case '>': return lexer_advance_with_doubletok(lexer, init_token(TOKEN_LAMDA, lexer_get_current_doubletok_as_string(lexer))); 
                 }
             return lexer_advance_with_token(lexer, init_token(TOKEN_EQUALS, lexer_get_current_char_as_string(lexer))); break;
             case ';': return lexer_advance_with_token(lexer, init_token(TOKEN_SEMI, lexer_get_current_char_as_string(lexer))); break;
@@ -146,6 +147,7 @@ token_T* lexer_get_next_token(lexer_T* lexer)
     return init_token(TOKEN_EOF, "\0");
 }
 
+/* Get string */
 token_T* lexer_collect_string(lexer_T* lexer)
 {
     lexer_advance(lexer);
@@ -168,6 +170,7 @@ token_T* lexer_collect_string(lexer_T* lexer)
                 case 't': s = "\t"; break;
                 case 'v': s = "\v"; break;
                 case '0': s = "\0"; break;
+                case '\\': s = "\\"; break;
             }
         }
         value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
@@ -179,6 +182,8 @@ token_T* lexer_collect_string(lexer_T* lexer)
     return init_token(TOKEN_STRING, value);
 }
 
+/* Get id */
+/* Uses is_allowed_name() to check if the name is valid */
 token_T* lexer_collect_id(lexer_T* lexer)
 {
     char* value = calloc(1, sizeof(char));
@@ -202,6 +207,7 @@ token_T* lexer_collect_id(lexer_T* lexer)
     return init_token(TOKEN_ID, value);
 }
 
+/* Get number */
 token_T* lexer_collect_number(lexer_T* lexer)
 {
     char* value = calloc(1, sizeof(char));
@@ -217,6 +223,7 @@ token_T* lexer_collect_number(lexer_T* lexer)
     return init_token(TOKEN_NUMBER, value);
 }
 
+/* Advance with token */
 token_T* lexer_advance_with_token(lexer_T* lexer, token_T* token)
 {
     lexer_advance(lexer);
@@ -224,6 +231,7 @@ token_T* lexer_advance_with_token(lexer_T* lexer, token_T* token)
     return token;
 }
 
+/* Advance with token that has a length of 2 */
 token_T* lexer_advance_with_doubletok(lexer_T* lexer, token_T* token)
 {
     lexer_advance(lexer);
@@ -232,19 +240,24 @@ token_T* lexer_advance_with_doubletok(lexer_T* lexer, token_T* token)
     return token;
 }
 
+/* Get current char as string */
 char* lexer_get_current_char_as_string(lexer_T* lexer)
 {
     char* str = calloc(2, sizeof(char));
     str[0] = lexer->c;
+    /* Use terminator at end of string */
     str[1] = '\0';
     return str;
 }
 
+/* Get current char[2] as string */
 char* lexer_get_current_doubletok_as_string(lexer_T* lexer)
 {
-    char* str = calloc(2, sizeof(char));
+    char* str = calloc(3, sizeof(char));
     str[0] = lexer->c;
     str[1] = lexer_next_token(lexer);
+    /* Use terminator at end of string */
+    str[2] = '\0';
 
     return str;
 }

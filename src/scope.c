@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-
+/* Initiate the scope */
 scope_T* init_scope()
 {
     scope_T* scope = calloc(1, sizeof(struct SCOPE_STRUCT));
@@ -17,6 +17,7 @@ scope_T* init_scope()
     return scope;
 }
 
+/* Add a function definition */
 AST_T* scope_add_function_definition(scope_T* scope, AST_T* fdef)
 {
     scope->function_definitions_size += 1;
@@ -40,6 +41,7 @@ AST_T* scope_add_function_definition(scope_T* scope, AST_T* fdef)
     return fdef;
 }
 
+/* Get a function definition */
 AST_T* scope_get_function_definition(scope_T* scope, const char* fname)
 {
     for (int i = 0; i < scope->function_definitions_size; i++)
@@ -55,6 +57,7 @@ AST_T* scope_get_function_definition(scope_T* scope, const char* fname)
     return (void*)0;
 }
 
+/* Add a variable definition */
 AST_T* scope_add_variable_definition(scope_T* scope, AST_T* vdef)
 {
     if (scope->variable_definitions == (void*) 0)
@@ -75,6 +78,7 @@ AST_T* scope_add_variable_definition(scope_T* scope, AST_T* vdef)
     return vdef;
 }
 
+/* Get a variable definition */
 AST_T* scope_get_variable_definition(scope_T* scope, const char* name)
 {
     for (int i = 0; i < scope->variable_definitions_size; i++)
@@ -90,6 +94,7 @@ AST_T* scope_get_variable_definition(scope_T* scope, const char* name)
     return (void*)0;
 }
 
+/* Change the value of a variable */
 AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* name)
 {
     for (int i = 0; i < scope->variable_definitions_size; i++)
@@ -100,17 +105,18 @@ AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* na
         {
             if (scope->variable_definitions[i]->variable_definition_is_const)
             {
-                printf("\nruntime error:\n    cant re-assign value to constant\n");
+                printf("\nruntime error:\n    can't re-assign value to constant '%s'\n", name);
                 exit(1);
             }
             scope->variable_definitions[i]->variable_definition_value = vdef;
-            vdef->scope = scope;
             return vdef;
         }
     }
     return (void*) 0;
 }
 
+/* Remove a variable definition */
+/* Used by the free() function */
 AST_T* scope_remove_variable_definition(scope_T* scope, const char* name)
 {
     for (int i = 0; i < scope->variable_definitions_size; i++)

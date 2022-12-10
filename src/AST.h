@@ -1,6 +1,8 @@
 #ifndef AST_H
 #define AST_H
+
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef struct AST_STRUCT
 {
@@ -27,7 +29,9 @@ typedef struct AST_STRUCT
         AST_ARRAY,
         AST_GET_ARRAY_ITEM_BY_INDEX,
         AST_DICT_ITEM,
-        AST_MATH_EXPR
+        AST_MATH_EXPR,
+        AST_ATTRIBUTE,
+        AST_STREAM
     } type;
 
     enum {
@@ -51,6 +55,7 @@ typedef struct AST_STRUCT
     int variable_definition_is_public;
     int variable_definition_is_const;
     int variable_definition_value_type;
+    int variable_definition_is_weak;
 
     /* AST_FUNCTION_DEFINITION */
     struct AST_STRUCT* function_definition_body;
@@ -133,6 +138,13 @@ typedef struct AST_STRUCT
     size_t math_expression_size;
     struct AST_STRUCT* math_expression_value;
     char math_expression_type;
+
+    /* AST_ATTRIBUTE */
+    struct AST_STRUCT* attribute_source;
+    struct AST_STRUCT* attribute_modifier;
+
+    /* AST_STREAM */
+    FILE* stream;
 
 } AST_T;
 
