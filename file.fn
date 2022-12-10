@@ -1,3 +1,0 @@
-import "math";
-
-println(absolute(-5));
