@@ -1,4 +1,4 @@
-# Fusion
+# Fusion version 0.2 alpha
 <img src="Fusion-Logo.png" alt="alt text" title="image Title" width="250"/>
 
 ## A fast interpretted C like programming language
