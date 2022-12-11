@@ -1,0 +1,25 @@
+{
+  "name": "fusion-syntax-highlighting",
+  "displayName": "Fusion Syntax Highlighting",
+  "description": "Syntax highlighting for the Fusion programming language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "fusion",
+      "aliases": ["Fusion", "fusion"],
+      "extensions": [".fn",".fsn"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "fusion",
+      "scopeName": "source.fusion",
+      "path": "./syntaxes/fusion.tmLanguage.json"
+    }]
+  }
+}
