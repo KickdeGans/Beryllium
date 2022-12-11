@@ -51,7 +51,7 @@ AST_T* parser_parse_statement(parser_T* parser, scope_T* scope)
     {
         return parser_parse_id(parser, scope);
     }
-    return init_ast(AST_NOOP);
+    return (void*) 0;
 }
 
 /* Parse compound */
@@ -63,9 +63,16 @@ AST_T* parser_parse_statements(parser_T* parser, scope_T* scope)
     compound->compound_value = calloc(1, sizeof(struct AST_STRUCT*));
 
     AST_T* ast_statement = parser_parse_statement(parser, scope);
+
+    if (ast_statement == (void*) 0)
+    {
+        return compound;
+    }
+
     ast_statement->scope = scope;
     compound->compound_value[0] = ast_statement;
     compound->compound_size += 1;
+
 
     if (parser->current_token->type != TOKEN_SEMI)
     {
