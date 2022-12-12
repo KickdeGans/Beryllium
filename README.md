@@ -4,7 +4,7 @@
 ## A fast interpretted C like programming language
 
 #### This projects is still in development and contains incomplete or non functional features and bugs.
-#### At the moment the virtual machine leaks LOTS of memory. Use with caution
+#### At the moment the virtual machine leaks LOTS of memory. Use with caution.
 #### If there are any bugs you find, please notify me.
 
 <br>
