@@ -241,14 +241,14 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
     }
     if (strcmp(node->function_call_name, "open") == 0)
     {
-        if (args_size != 1)
+        if (args_size != 2)
         {
-            printf("\nruntime error:\n    function 'open()' takes 1 argument\n");
+            printf("\nruntime error:\n    function 'open()' takes 2 argument\n");
             exit(1);
         }
         AST_T* ast = init_ast(AST_STREAM);
 
-        ast->stream = fopen(visitor_visit(visitor, args[0])->string_value, "wrb");
+        ast->stream = fopen(visitor_visit(visitor, args[0])->string_value, visitor_visit(visitor, args[1])->string_value);
 
         return ast;
     }
