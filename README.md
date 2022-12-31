@@ -2,6 +2,7 @@
 <img src="Fusion-Logo.png" alt="alt text" title="image Title" width="250"/>
 
 ## A fast interpretted C like programming language
+### Linux specific interpretter
 
 #### This projects is still in development and contains incomplete or non functional features and bugs.
 #### At the moment the virtual machine leaks LOTS of memory. Use with caution.
