@@ -4,13 +4,20 @@
 ## A fast interpretted C like programming language
 ### Linux specific interpretter
 
-#### This projects is still in development and contains incomplete or non functional features and bugs.
-#### At the moment the virtual machine leaks LOTS of memory. Use with caution.
-#### If there are any bugs you find, please notify me.
+
+#### Tests: *In progress*
+
+<br>
+
+This projects is still in development and contains incomplete or non functional features and bugs.<br>
+At the moment the virtual machine leaks LOTS of memory. Use with caution.<br>
+If there are any bugs you find, please notify me.
 
 <br>
 
 ### [How to install](https://github.com/KickdeGans/Fusion/wiki)
 ### [Documentation](https://github.com/KickdeGans/Fusion/wiki/Documentation)
+
+<br>
 
 This project is a fork of https://github.com/sebbekarlsson/hello
