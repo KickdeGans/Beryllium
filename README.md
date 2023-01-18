@@ -17,7 +17,7 @@ If there are any bugs you find, please notify me.
 ```shell
 ./configure
 make
-sudo make install
+make install
 ```
 ### [Documentation](https://github.com/KickdeGans/Fusion/wiki/Documentation)
 
