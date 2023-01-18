@@ -13,9 +13,12 @@ This projects is still in development and contains incomplete or non functional 
 At the moment the virtual machine leaks LOTS of memory. Use with caution.<br>
 If there are any bugs you find, please notify me.
 
-<br>
-
-### [How to install](https://github.com/KickdeGans/Fusion/wiki)
+### Installation:
+```shell
+./configure
+make
+sudo make install
+```
 ### [Documentation](https://github.com/KickdeGans/Fusion/wiki/Documentation)
 
 <br>
