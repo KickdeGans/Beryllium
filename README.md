@@ -24,7 +24,6 @@ git clone https://www.github.com/KickdeGans/Fusion.git
 ```
 #### Install:
 ```shell
-./configure
 make
 make install
 ```
