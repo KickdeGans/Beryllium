@@ -10,14 +10,12 @@
 [Documentation](https://github.com/KickdeGans/Fusion/wiki/Documentation)
 <br>
 [Bult-in functions](https://github.com/KickdeGans/Fusion/wiki/Built-in-functions)
-
 <br>
-
+## Please read!
 This projects is still in development and contains incomplete or non functional features and bugs.<br>
 At the moment the virtual machine leaks LOTS of memory. Use with caution.<br>
-If there are any bugs you find, please notify me.
-
-### Installation:
+If there are any bugs you find, please notify me.<br>
+## Installation:
 #### Clone the repo:
 ```shell
 git clone https://www.github.com/KickdeGans/Fusion.git
