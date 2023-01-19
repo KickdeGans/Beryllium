@@ -4,8 +4,12 @@
 ## A fast interpretted C like programming language
 ### Linux specific interpretter
 
-
 #### Tests: *Not ready for testing*
+
+## Contents:
+[Documentation](https://github.com/KickdeGans/Fusion/wiki/Documentation)
+<br>
+[Bult-in functions](https://github.com/KickdeGans/Fusion/wiki/Built-in-functions)
 
 <br>
 
@@ -32,9 +36,6 @@ fusion --verify
 ```shell
 fusion --hello_world
 ```
-
-## Contents:
-[Documentation](https://github.com/KickdeGans/Fusion/wiki/Documentation)
 
 <br>
 
