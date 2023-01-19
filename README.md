@@ -14,12 +14,27 @@ At the moment the virtual machine leaks LOTS of memory. Use with caution.<br>
 If there are any bugs you find, please notify me.
 
 ### Installation:
+#### Clone the repo:
+```shell
+git clone https://www.github.com/KickdeGans/Fusion.git
+```
+#### Install:
 ```shell
 ./configure
 make
 make install
 ```
-### [Documentation](https://github.com/KickdeGans/Fusion/wiki/Documentation)
+#### Test:
+```shell
+fusion --verify
+```
+#### *Or:*
+```shell
+fusion --hello_world
+```
+
+## Contents:
+[Documentation](https://github.com/KickdeGans/Fusion/wiki/Documentation)
 
 <br>
 
