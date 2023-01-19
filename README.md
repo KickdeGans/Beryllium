@@ -1,5 +1,6 @@
-# Fusion
 <img src="Fusion-Logo.png" alt="alt text" title="image Title" width="250"/>
+
+# Fusion
 
 ## A fast interpretted C like programming language
 ### Linux specific interpretter
