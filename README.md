@@ -24,16 +24,13 @@ git clone https://www.github.com/KickdeGans/Fusion.git
 ```
 #### Install:
 ```shell
+./configure
 make
 make install
 ```
 #### Test:
 ```shell
 fusion --verify
-```
-#### *Or:*
-```shell
-fusion --hello_world
 ```
 
 <br>
