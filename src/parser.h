@@ -12,7 +12,7 @@ typedef struct PARSER_STRUCT
     token_T* prev_token;
     scope_T* scope;
     AST_T* prev_ast;
-    int opened_braces;
+    int require_semicolon;
 } parser_T;
 
 parser_T* init_parser(lexer_T* lexer);

@@ -1,10 +1,31 @@
-fn is_linux()
+proc is_linux()
 {
-    int value = 0;
     if (system("uname -r > nul") == 0)
     {
-        file_delete("nul");
-        value = 1;
+        remove("nul");
+        return 1;
     };
-    return value;
+    return 0;
+};
+
+proc shutdown()
+{
+    if (is_linux())
+    {
+        system("poweroff");
+        return;
+    };
+    system("shutdown -s -t 0");
+    return;
+};
+
+proc restart()
+{
+    if (is_linux())
+    {
+        system("reboot");
+        return;
+    };
+    system("shutdown -r -t 0");
+    return;
 };

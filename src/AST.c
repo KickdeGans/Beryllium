@@ -1,4 +1,5 @@
 #include "AST.h"
+#include "scope.h"
 
 /* Initiate Abstract Syntax Tree */
 AST_T* init_ast(int type)
@@ -7,10 +8,11 @@ AST_T* init_ast(int type)
     
     ast->type = type;
     ast->scope = (void*) 0;
-    ast->private_scope = (void*) 0;
+    ast->private_scope = init_scope();
     ast->is_return_value = 0;
     ast->break_ = 0;
     ast->continue_ = 0;
+    ast->is_private = 0;
   
     /*  AST_VARIABLE_DEFINITION */
     ast->variable_definition_variable_name = (void*) 0;

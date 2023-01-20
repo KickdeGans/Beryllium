@@ -1,4 +1,4 @@
-fn init_thread()
+proc init_thread()
 {
     
 };

@@ -81,6 +81,11 @@ AST_T* scope_add_variable_definition(scope_T* scope, AST_T* vdef)
 /* Get a variable definition */
 AST_T* scope_get_variable_definition(scope_T* scope, const char* name)
 {
+    if (scope == (void*) 0)
+    {
+        return (void*) 0;
+    }
+
     for (int i = 0; i < scope->variable_definitions_size; i++)
     {
         AST_T* vdef = scope->variable_definitions[i];
@@ -97,6 +102,15 @@ AST_T* scope_get_variable_definition(scope_T* scope, const char* name)
 /* Change the value of a variable */
 AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* name)
 {
+    if (scope == (void*) 0)
+    {
+        return (void*) 0;
+    }
+    if (vdef == (void*) 0)
+    {
+        return (void*) 0;
+    }
+
     for (int i = 0; i < scope->variable_definitions_size; i++)
     {
         AST_T* vdef_ = scope->variable_definitions[i];
@@ -119,6 +133,11 @@ AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* na
 /* Used by the free() function */
 AST_T* scope_remove_variable_definition(scope_T* scope, const char* name)
 {
+    if (scope == (void*) 0)
+    {
+        return (void*) 0;
+    }
+
     for (int i = 0; i < scope->variable_definitions_size; i++)
     {
         AST_T* vdef_ = scope->variable_definitions[i];

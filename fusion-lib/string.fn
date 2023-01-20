@@ -1,0 +1,139 @@
+public const var chars = {
+    "alpha-lower": {
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+        "u",
+        "v",
+        "w",
+        "x",
+        "y",
+        "z"
+    },
+    "alpha-upper": {
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z"
+    },
+    "numbers": {
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+    }
+};
+public const var lower_alpha   = chars["alpha-lower"];
+public const var upper_alpha   = chars["alpha-upper"];
+public const var numbers       = chars["numbers"];
+public const string whitespace = " ";
+public const string nothing    = "";
+
+proc is_alpha(ch)
+{
+    for (i: lower_alpha)
+        if (ch == i)
+            return 1;
+    for (i: upper_alpha)
+        if (ch == i)
+            return 1;
+    return 0;
+};
+
+proc is_digit(ch)
+{
+    for (i: numbers)
+        if (ch == i)
+            return 1;
+    return 0;
+};
+
+proc is_whitespace(str)
+{
+    if (str == whitespace)
+        return 1;
+
+    int whitespace_count = 0;
+
+    for (char: str)
+    {
+        if (is_whitespace(char))
+            whitespace_count = whitespace_count + 1;
+    };
+
+    return length(str) == whitespace_count;
+};
+
+proc length(str_)
+{
+    if (typeof(str_) != str)
+        return 0;
+
+    int len = 0;
+    
+    for (i: str_)
+        len = len + 1;
+    
+    return len + 1;
+};
+
+proc concat(str1, str2)
+{
+    return write(str1, str2);
+};
+
+proc join(arr, sep)
+{
+    string s;
+
+    for (i: arr)
+    {
+        s = concat(s, concat(i, sep));
+    };    
+
+    return s;
+};

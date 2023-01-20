@@ -1,4 +1,4 @@
-fn http_get(host, addr) 
+proc http_get(host, addr) 
 {
     string header = "GET ";
 

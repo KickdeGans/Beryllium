@@ -1,0 +1,47 @@
+proc matrix_1d(size_x)
+{
+    var array = { };
+    
+    for (y: size_x)
+    {
+        array = array.append(null);
+    };
+    
+    return array;
+};
+
+proc matrix_2d(size_x, size_y)
+{
+    var array = { };
+    
+    for (y: size_y)
+    {
+        array = array.append(matrix_1d(size_x));
+    };
+    
+    return array;
+};
+
+proc matrix_3d(size_x, size_y, size_z)
+{
+    var array = { };
+    
+    for (y: size_y)
+    {
+        array = array.append(matrix_2d(size_x, size_z));
+    };
+    
+    return array;
+};
+
+proc matrix_4d(size_x, size_y, size_z, size_w)
+{
+    var array = { };
+    
+    for (y: size_y)
+    {
+        array = array.append(matrix_3d(size_x, size_z, size_w));
+    };
+    
+    return array;
+};

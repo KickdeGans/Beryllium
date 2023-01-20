@@ -8,6 +8,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <sys/time.h>
 
 AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
 {
@@ -31,7 +33,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
                         case 0: printf("false"); break;
                     }
                     break;
-                case AST_NOOP: printf("null"); break;
+                case AST_NOOP: printf(""); break;
                 default: break;
             }
         }
@@ -54,7 +56,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
                         case 0: printf("false"); break;
                     }
                     break;
-                case AST_NOOP: printf("null"); break;
+                case AST_NOOP: printf(""); break;
                 default: break;
             }
         }
@@ -105,7 +107,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
                         case 0: printf("false"); break;
                     }
                     break;
-                case AST_NOOP: printf("(null)"); break;
+                case AST_NOOP: printf(""); break;
                 default: break;
             }
         }
@@ -113,75 +115,9 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         fgets(value, sizeof(value), stdin);
         ast->string_value = malloc(sizeof(value));
         strcpy(ast->string_value, value);
+        ast->string_value[strlen(ast->string_value)] = '\0';
         ast->string_value[strlen(ast->string_value) - 1] = '\0';
         return ast;
-    }
-
-    if (strcmp(node->function_call_name, "atoi") == 0)
-    {
-        if (args_size != 1)
-        {
-            printf("\nruntime error:\n    function 'atoi()' takes 1 argument\n");
-            exit(1);
-        }
-        AST_T* visited_ast = init_ast(AST_INT);
-        AST_T* ast = visitor_visit(visitor, args[0]);
-        switch (ast->type)
-        {
-            case AST_STRING: visited_ast->ast_int = atoi(ast->string_value); break;
-            case AST_DOUBLE: visited_ast->ast_int = (int)ast->ast_double; break;
-            case AST_BOOLEAN: visited_ast->ast_int = (int)ast->boolean_value; break;
-            case AST_INT: visited_ast->ast_int = ast->ast_int; break;
-            default: visited_ast->ast_int = 0; break;
-        }
-        return visited_ast;
-    }
-    if (strcmp(node->function_call_name, "atod") == 0)
-    {
-        if (args_size != 1)
-        {
-            printf("\nruntime error:\n    function 'atod()' takes 1 argument\n");
-            exit(1);
-        }
-        AST_T* visited_ast = init_ast(AST_INT);
-        AST_T* ast = visitor_visit(visitor, args[0]);
-        switch (ast->type)
-        {
-            case AST_STRING: visited_ast->ast_double = atof(ast->string_value); break;
-            case AST_DOUBLE: visited_ast->ast_double = ast->ast_double; break;
-            case AST_BOOLEAN: visited_ast->ast_double = (double)ast->boolean_value; break;
-            case AST_INT: visited_ast->ast_double = ast->ast_int; break;
-            default: visited_ast->ast_double = 0; break;
-        }
-        return visited_ast;
-    }
-    if (strcmp(node->function_call_name, "atob") == 0)
-    {
-        if (args_size != 1)
-        {
-            printf("\nruntime error:\n    function 'atob()' takes 1 argument\n");
-            exit(1);
-        }
-        AST_T* visited_ast = init_ast(AST_BOOLEAN);
-        visited_ast->boolean_value = atoi(visitor_visit(visitor, args[0])->string_value);
-        return visited_ast;
-    }
-    if (strcmp(node->function_call_name, "free") == 0)
-    {
-        scope_remove_variable_definition(
-            node->scope,
-            args[0]->variable_name
-        );
-        scope_remove_variable_definition(
-            visitor->scope,
-            args[0]->variable_name
-        );
-        return node;
-    }
-    if (strcmp(node->function_call_name, "async") == 0)
-    {
-        async_exec(visitor_visit(visitor, args[0]));
-        return init_ast(AST_NOOP);
     }
     if (strcmp(node->function_call_name, "sleep") == 0)
     {
@@ -225,17 +161,16 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
             exit(1);
         }
         AST_T* inp = visitor_visit(visitor, args[0]);
-        AST_T* res = init_ast(AST_STRING);
+        AST_T* res = init_ast(AST_INT);
         switch (inp->type)
         {
-            case AST_STRING: res->string_value = "string"; break;
-            case AST_INT: res->string_value = "int"; break;
-            case AST_DOUBLE: res->string_value = "double"; break;
-            case AST_LONG: res->string_value = "long"; break;
-            case AST_ARRAY: res->string_value = malloc(100); sprintf(res->string_value, "array[%li]", inp->array_size); break;
-            case AST_CHAR: res->string_value = "char"; break;
-            case AST_STREAM: res->string_value = "stream"; break;
-            default: res->string_value = "void"; break;
+            case AST_STRING: res->ast_int = 0x32002; break;
+            case AST_INT: res->ast_int = 0x32000; break;
+            case AST_DOUBLE: res->ast_int = 0x32001; break;
+            case AST_LONG: res->ast_int = 0x32006; break;
+            case AST_ARRAY: res->ast_int = 0x32004; break;
+            case AST_STREAM: res->ast_int = 0x32005; break;
+            default: res->ast_int = -2; break;
         }
         return res;
     }
@@ -275,6 +210,18 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         AST_T* stream = visitor_visit(visitor, args[0]);
         AST_T* value = visitor_visit(visitor, args[1]);
         
+        if (stream->type == AST_STRING)
+        {
+            char* string = calloc(sizeof(stream->string_value) + sizeof(value->string_value) + 1, sizeof(char*));
+
+            sprintf(string, "%s%s", stream->string_value, value->string_value);
+
+            AST_T* ast = init_ast(AST_STRING);
+            ast->string_value = string;
+
+            return ast;
+        }
+
         fprintf(stream->stream, value->string_value);
 
         return init_ast(AST_NOOP);
@@ -288,6 +235,24 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         }
         FILE* stream = visitor_visit(visitor, args[0])->stream;
         
+        if (stream == stdin)
+        {
+            AST_T* ast = init_ast(AST_STRING);
+
+            char value[16384];
+
+            fgets(value, sizeof(value), stdin);
+
+            ast->string_value = malloc(sizeof(value));
+
+            strcpy(ast->string_value, value);
+
+            ast->string_value[strlen(ast->string_value)] = '\0';
+            ast->string_value[strlen(ast->string_value) - 1] = '\0';
+
+            return ast;
+        }
+
         char* buffer = 0;
         size_t length;
 
@@ -316,6 +281,14 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         AST_T* res = init_ast(AST_INT);
         res->ast_int = remove(file);
         return res;
+    }
+    if (strcmp(node->function_call_name, "rand") == 0)
+    {
+        AST_T* ast = init_ast(AST_INT);
+
+        ast->ast_int = rand();
+        
+        return ast;
     }
     
     return (void*) 0;

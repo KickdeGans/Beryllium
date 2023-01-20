@@ -12,7 +12,7 @@ typedef struct AST_STRUCT
         AST_STATEMENT_DEFINITION,
         AST_STRUCT_DEFINITION,
         AST_CLASS_DEFINITION,
-        AST_VARIABLE_SETTTER,
+        AST_VARIABLE_SETTER,
         AST_VARIABLE,
         AST_FUNCTION_CALL,
         AST_STATEMENT_CALL,
@@ -21,7 +21,6 @@ typedef struct AST_STRUCT
         AST_INT,
         AST_DOUBLE,
         AST_LONG,
-        AST_CHAR,
         AST_FORLOOP,
         AST_FUNCTION_RETURN,
         AST_COMPOUND,
@@ -48,6 +47,7 @@ typedef struct AST_STRUCT
     int is_return_value;
     int break_;
     int continue_;
+    int is_private;
 
     /* AST_VARIABLE_DEFINITION */
     char* variable_definition_variable_name;

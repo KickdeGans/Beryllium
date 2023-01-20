@@ -1,50 +1,77 @@
+import "stdlib";
+
 public const double pi = 3.14159265358;
 
-fn octets_to_srgb(red, green, blue) 
+proc octets_to_srgb(red, green, blue) 
 {
     return blue + 
            green + 
            (green * 255) + 
            (red * 65536);
-};
-fn interpolate(a, b)
+}
+proc interpolate(a, b)
 {
     return average({a, b});
-};
-fn average(array)
+}
+proc average(array)
 {
     var res = 0;
     for (i : array) res = res + i;
     return res / sizeof(array);
-};
-fn is_even(x) 
+}
+proc is_even(x) 
 {
-    return x % 2;
-};
-fn abs(x)
+    return (x % 2) == 0;
+}
+proc is_odd(x)
+{
+    return (x % 2) != 0;
+}
+proc abs(x)
 {
     if (x >= 0) 
         return x; 
     else 
         return x - (x * 2);
-};
-fn invert(x)
+}
+proc invert(x)
 {
     return x - (x * 2);
-};
-fn factorial(x)
+}
+proc factorial(x)
 {
     int sum = 1;
     for (i : x)
         sum = sum * i;
     return sum;
-};
-fn power(x, y)
+}
+proc power(x, y)
 {
     int sum = 1;
     for (i : y)
     {
-        sum=sum*x;
+        sum = sum * x;
     };
     return sum;
-};
+}
+proc randrange(lower, upper)
+{
+    int r = rand() + upper - lower;
+    int x = upper - lower;
+
+    x = x + 1;
+    r = r % x;
+    r = r + lower;
+
+    while (r < lower)
+    {
+        r = rand() + upper - lower;
+        x = upper - lower;
+        
+        x = x + 1;
+        r = r % x;
+        r = r + lower;
+    }
+
+    return r;
+}

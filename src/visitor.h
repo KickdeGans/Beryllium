@@ -35,6 +35,12 @@ AST_T* visitor_visit_statement_call(visitor_T* visitor, AST_T* node);
 
 AST_T* visitor_visit_string(visitor_T* visitor, AST_T* node);
 
+AST_T* visitor_visit_int(visitor_T* visitor, AST_T* node);
+
+AST_T* visitor_visit_double(visitor_T* visitor, AST_T* node);
+
+AST_T* visitor_visit_stream(visitor_T* visitor, AST_T* node);
+
 AST_T* visitor_visit_boolean(visitor_T* visitor, AST_T* node);
 
 AST_T* visitor_visit_compound(visitor_T* visitor, AST_T* node);

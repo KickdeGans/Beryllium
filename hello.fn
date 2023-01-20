@@ -1,0 +1,5 @@
+string text = "Hello world!";
+
+println("Hello world!");
+
+exit(0);
