@@ -1,8 +1,8 @@
 #ifndef PARSER_H
 #define PARSER_H
 #include "lexer.h"
-#include "AST.h"
-#include "scope.h"
+#include "../core/AST.h"
+#include "../core/scope.h"
 
 
 typedef struct PARSER_STRUCT

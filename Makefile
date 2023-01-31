@@ -1,13 +1,22 @@
+core_files = src/*.c src/lib/*.c src/core/*.c src/runtime/*.c src/compiler/*.c
+packager_files = fusion-packages/main.c
+core_name = fusion
+packager_name = fusion-packages/fusion-packages
+core_install_location = /bin/fusion
+packager_install_location = /bin/fusion_packages
+core_libraries_folder = /bin/fusion-lib
+core_libraries_name = fusion-lib
+
 make:
-	gcc -Ofast -lm src/*.c src/lib/*.c -o fusion
-	gcc fusion-packages/main.c -o fusion-packages/fusion-packages
+	gcc -Ofast -lm $(core_files) -o $(core_name)
+	gcc $(packager_files) -o $(packager_name)
 
 install:
-	cp fusion /bin/fusion
-	sudo rm -rf /bin/fusion-lib
-	cp -r fusion-lib /bin/fusion-lib
+	cp $(core_name) $(core_install_location)
+	sudo rm -rf $(core_libraries_folder)
+	cp -r $(core_libraries_name) $(core_libraries_folder)
 
-	cp fusion-packages/fusion-packages /bin/fusion-packages
+	cp $(packager_name) $(packager_install_location)
 
 dev:
-	gcc -Wall -Werror -Ofast -lm src/*.c src/lib/*.c -o fusion
+	gcc -Wall -ggdb -Werror -Ofast -lm $(core_files) -o $(core_name)

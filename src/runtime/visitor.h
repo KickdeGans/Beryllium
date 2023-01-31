@@ -1,7 +1,7 @@
 #ifndef VISITOR_H
 #define VISITOR_H
-#include "AST.h"
-#include "scope.h"
+#include "../core/AST.h"
+#include "../core/scope.h"
 
 typedef struct VISITOR_STRUCT
 {

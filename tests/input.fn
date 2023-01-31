@@ -1,0 +1,3 @@
+string in = input("test: ");
+
+println(in);

@@ -4,4 +4,17 @@ proc sizeof(x)
     for (i: x)
         length = length + 1;
     return length;
-};
+}
+
+proc contains(haystack, needle)
+{
+    for (cc: haystack)
+    {
+        if (cc == needle)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}

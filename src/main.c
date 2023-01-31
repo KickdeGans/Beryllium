@@ -1,55 +1,19 @@
-#include "AST.h"
-#include "lexer.h"
-#include "parser.h"
-#include "scope.h"
-#include "visitor.h"
-#include "lib/io.h"
 #include "main.h"
+#include "core/run.h"
+#include "core/AST.h"
+#include "runtime/visitor.h"
+#include "compiler/parser.h"
+#include "compiler/lexer.h"
+#include "lib/io.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
 
-void set_rand()
-{
-    struct timeval time;
-
-    gettimeofday(&time, NULL);
-
-    size_t s1 = (size_t)(time.tv_sec) * 1000;
-    size_t s2 = (time.tv_usec / 1000);
-
-    srand(s1 + s2);
-
-    return;
-}
-
 void print_help()
 {
-    printf("Usage: fusion <options> <file>\n\n--add-library:\n    Add a code file to the library.\n\n--verify:\n    Verify if fusion is installed.\n\n--help:\n    Open help menu.\n");
-    return;
-}
-
-/* Load file to run */
-void run(char* filepath)
-{
-    char* file_contents = io_file_read(filepath);
-
-    lexer_T* lexer = init_lexer(file_contents);
-    parser_T* parser = init_parser(lexer);
-    AST_T* root = parser_parse(parser, parser->scope);
-    visitor_T* visitor = init_visitor();
-
-    free(lexer);
-    free(parser);
-    free(file_contents);
-    set_rand();
-
-    visitor_visit(visitor, root);
-
-    ast_free(root);
-    free(visitor);
-
+    printf("Usage: fusion <options> <file>\n\n--verify:\n    Verify if fusion is installed.\n\n--help:\n    Open help menu.\n");
     return;
 }
 
@@ -58,6 +22,7 @@ int main(int argc, char* argv[])
 {
     if (argc == 1)
     {
+        printf("No options\n");
         print_help();
     }
 
@@ -73,12 +38,9 @@ int main(int argc, char* argv[])
         {
             print_help();
         }
-        else
-        {
-            char* path = argv[i];
-            run(path);  
-        }
     }
-    
+
+    run_file(argv[argc-1]);
+
     return 0;
 }

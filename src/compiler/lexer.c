@@ -1,6 +1,6 @@
 #include "lexer.h"
 #include "identifier.h"
-#include "lib/string.h"
+#include "../lib/string.h"
 #include "token.h"
 #include <stdlib.h>
 #include <string.h>
@@ -37,7 +37,7 @@ void lexer_advance(lexer_T* lexer)
 /* Output: if(a==b){} */
 void lexer_skip_whitespace(lexer_T* lexer)
 {
-    while (lexer->c == ' ' || lexer->c == 10)
+    while (lexer->c == ' ' || lexer->c == 10 || lexer->c == '	')
     {
         lexer_advance(lexer);
     }
@@ -68,7 +68,7 @@ token_T* lexer_get_next_token(lexer_T* lexer)
         {
             lexer->current_line += 1;
         }
-        if (lexer->c == ' ' || lexer->c == 10)
+        if (lexer->c == ' ' || lexer->c == 10 || lexer->c == '	')
         {
             lexer_skip_whitespace(lexer);
         }

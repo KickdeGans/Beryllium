@@ -1,8 +1,8 @@
 #include "parser.h"
-#include "AST.h"
+#include "../core/AST.h"
 #include "lexer.h"
-#include "scope.h"
-#include "lib/string.h"
+#include "../core/scope.h"
+#include "../lib/string.h"
 #include "identifier.h"
 #include "token.h"
 #include <stdio.h>
@@ -79,7 +79,7 @@ AST_T* parser_parse_statements(parser_T* parser, scope_T* scope)
 
     if (ast_statement == (void*) 0)
     {
-        return compound;
+        return init_ast(AST_NOOP);
     }
 
     ast_statement->scope = scope;
@@ -120,9 +120,8 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
             parser->current_token->type == TOKEN_RBRACE ||
             parser->current_token->type == TOKEN_COMMA ||
             parser->current_token->type == TOKEN_SEMI)
-        {
             break;
-        }
+
         switch (parser->current_token->type)
         { 
             case TOKEN_STRING: parser->prev_ast = parser_parse_string(parser, scope); break;
@@ -147,6 +146,7 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
             default: break;
         }
     }
+
     return parser->prev_ast;
 }
 
@@ -792,15 +792,15 @@ AST_T* parser_parse_forloop(parser_T* parser, scope_T* scope)
 {
     AST_T* ast_forloop = init_ast(AST_FORLOOP);
 
-    ast_forloop->variable_definition_variable_name = parser->current_token->value;
+    ast_forloop->forloop_variable_definition = parser_parse_variable_definition(parser, scope);
 
-    parser_eat(parser, TOKEN_ID);
+    parser_eat(parser, TOKEN_SEMI);
 
-    parser_eat(parser, TOKEN_COLON);
+    ast_forloop->forloop_condition = parser_parse_expr(parser, scope);
 
-    ast_forloop->forloop_value = parser_parse_expr(parser, scope);
+    parser_eat(parser, TOKEN_SEMI);
 
-    ast_forloop->scope = scope;
+    ast_forloop->forloop_variable_modifier = parser_parse_variable_setter(parser, scope);
 
     return ast_forloop;
 }

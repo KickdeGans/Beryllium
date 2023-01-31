@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "AST.h"
+#include "../core/AST.h"
 #include "identifier.h"
 
 char allowed_chars[] =

@@ -1,9 +1,9 @@
 #include "builtin_functions.h"
 #include "visitor.h"
-#include "AST.h"
-#include "lib/io.h"
+#include "../core/AST.h"
+#include "../lib/io.h"
 #include "thread.h"
-#include "lib/http.h"
+#include "../lib/http.h"
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -33,7 +33,6 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
                         case 0: printf("false"); break;
                     }
                     break;
-                case AST_NOOP: printf(""); break;
                 default: break;
             }
         }
@@ -56,7 +55,6 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
                         case 0: printf("false"); break;
                     }
                     break;
-                case AST_NOOP: printf(""); break;
                 default: break;
             }
         }
@@ -107,7 +105,6 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
                         case 0: printf("false"); break;
                     }
                     break;
-                case AST_NOOP: printf(""); break;
                 default: break;
             }
         }

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "AST.h"
+#include "../core/AST.h"
 
 
 AST_T** init_array()

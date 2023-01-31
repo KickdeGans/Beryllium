@@ -44,6 +44,11 @@ AST_T* scope_add_function_definition(scope_T* scope, AST_T* fdef)
 /* Get a function definition */
 AST_T* scope_get_function_definition(scope_T* scope, const char* fname)
 {
+    if (scope == (void*) 0)
+    {
+        return (void*) 0;
+    }
+
     for (int i = 0; i < scope->function_definitions_size; i++)
     {
         AST_T* fdef = scope->function_definitions[i];
@@ -60,6 +65,11 @@ AST_T* scope_get_function_definition(scope_T* scope, const char* fname)
 /* Add a variable definition */
 AST_T* scope_add_variable_definition(scope_T* scope, AST_T* vdef)
 {
+    if (scope == (void*) 0)
+    {
+        scope = init_scope();
+    }
+
     if (scope->variable_definitions == (void*) 0)
     {
         scope->variable_definitions = calloc(1, sizeof(struct AST_STRUCT*));

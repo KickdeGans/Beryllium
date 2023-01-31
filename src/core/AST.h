@@ -24,13 +24,13 @@ typedef struct AST_STRUCT
         AST_FORLOOP,
         AST_FUNCTION_RETURN,
         AST_COMPOUND,
-        AST_NOOP,
         AST_ARRAY,
         AST_GET_ARRAY_ITEM_BY_INDEX,
         AST_DICT_ITEM,
         AST_MATH_EXPR,
         AST_ATTRIBUTE,
-        AST_STREAM
+        AST_STREAM,
+        AST_NOOP /* KEEP AST_NOOP AT END OF ENUM */
     } type;
 
     enum {
@@ -110,8 +110,9 @@ typedef struct AST_STRUCT
     char ast_char;
 
     /* AST_FORLOOP */
-    char* forloop_variable_name;
-    struct AST_STRUCT* forloop_value;
+    struct AST_STRUCT* forloop_variable_definition;
+    struct AST_STRUCT* forloop_condition;
+    struct AST_STRUCT* forloop_variable_modifier;
 
     /* AST_VARIABLE_SETTER */
     char* variable_setter_variable_name;

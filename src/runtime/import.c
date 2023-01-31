@@ -1,8 +1,8 @@
 #include "import.h"
 #include "visitor.h"
-#include "lexer.h"
-#include "parser.h"
-#include "lib/io.h"
+#include "../compiler/lexer.h"
+#include "../compiler/parser.h"
+#include "../lib/io.h"
 
 /* Import a file */
 /* Usage: */

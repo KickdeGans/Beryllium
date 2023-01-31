@@ -4,7 +4,7 @@
 /* Initiate Abstract Syntax Tree */
 AST_T* init_ast(int type)
 {
-    AST_T* ast = calloc(1, sizeof(struct AST_STRUCT));
+    AST_T* ast = malloc(sizeof(AST_T));
     
     ast->type = type;
     ast->scope = (void*) 0;
@@ -82,7 +82,9 @@ AST_T* init_ast(int type)
     ast->compound_size = 0;
 
     /* AST_FORLOOP */
-    ast->forloop_variable_name = (void*) 0;
+    ast->forloop_variable_definition = (void*) 0;
+    ast->forloop_condition = (void*) 0;
+    ast->forloop_variable_modifier = (void*) 0;
 
     /* AST_ARRAY */
     ast->array_value = (void*) 0;

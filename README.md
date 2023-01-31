@@ -1,11 +1,12 @@
 <img src="Fusion-Logo.png" alt="alt text" title="image Title" width="250"/>
 
 # Fusion
+## Version 0.3-1
 
 ## A fast interpretted C like programming language
 ### Linux specific interpretter
 
-#### Tests: *Not ready for testing*
+#### Tests: *In progess*
 
 ## Contents:
 [Documentation](https://github.com/KickdeGans/Fusion/wiki/Documentation)
