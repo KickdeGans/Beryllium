@@ -1,4 +1,4 @@
-for (int i = 0; i < 10; i = i + 1)
+foreach (i -> 10)
 {
-    println(i);   
+    println(i);
 }
