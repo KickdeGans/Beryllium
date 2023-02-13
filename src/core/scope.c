@@ -120,6 +120,10 @@ AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* na
     {
         return (void*) 0;
     }
+    if (name == (void*) 0)
+    {
+        return (void*) 0;
+    }
 
     for (int i = 0; i < scope->variable_definitions_size; i++)
     {
@@ -159,4 +163,13 @@ AST_T* scope_remove_variable_definition(scope_T* scope, const char* name)
         }
     }
     return (void*)0;
+}
+
+void scope_free(scope_T* scope)
+{
+    scope = NULL;
+
+    free(scope);
+
+    return;
 }

@@ -19,4 +19,4 @@ install:
 	cp $(packager_name) $(packager_install_location)
 
 dev:
-	gcc -Wall -ggdb -Werror -Ofast -lm $(core_files) -o $(core_name)
+	gcc -Wall -ggdb -g -Werror -Ofast -lm $(core_files) -o $(core_name)

@@ -203,11 +203,6 @@ token_T* lexer_collect_id(lexer_T* lexer)
         lexer_advance(lexer);
     }
 
-    if (strcmp(value, "end") == 0)
-    {
-        return init_token(TOKEN_END_KEYWORD, value);
-    }
-
     if (!is_valid_name(value) && !digits_only(value))
     {
         printf("\ncompilation error:\n    invalid identifier name '%s' at line %d\n", value, lexer->current_line);

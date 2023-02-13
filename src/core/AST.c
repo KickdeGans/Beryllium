@@ -86,6 +86,10 @@ AST_T* init_ast(int type)
     ast->forloop_condition = (void*) 0;
     ast->forloop_variable_modifier = (void*) 0;
 
+    /* AST_FOREACH */
+    ast->foreach_variable_name = (void*) 0;
+    ast->foreach_source = (void*) 0;
+
     /* AST_ARRAY */
     ast->array_value = (void*) 0;
     ast->array_size = 0;
@@ -113,7 +117,9 @@ AST_T* init_ast(int type)
 
 void ast_free(AST_T* ast)
 {
-    if (ast != (void*)0)
-        free(ast);
+    ast = (void*) 0;
+
+    free(ast);
+
     return;
 }

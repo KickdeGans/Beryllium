@@ -22,6 +22,7 @@ typedef struct AST_STRUCT
         AST_DOUBLE,
         AST_LONG,
         AST_FORLOOP,
+        AST_FOREACH,
         AST_FUNCTION_RETURN,
         AST_COMPOUND,
         AST_ARRAY,
@@ -113,6 +114,10 @@ typedef struct AST_STRUCT
     struct AST_STRUCT* forloop_variable_definition;
     struct AST_STRUCT* forloop_condition;
     struct AST_STRUCT* forloop_variable_modifier;
+
+    /* AST_FOREACH */
+    char* foreach_variable_name;
+    struct AST_STRUCT* foreach_source;
 
     /* AST_VARIABLE_SETTER */
     char* variable_setter_variable_name;

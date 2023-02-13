@@ -24,6 +24,8 @@ int main(int argc, char* argv[])
     {
         printf("No options\n");
         print_help();
+
+        exit(0);
     }
 
     for (int i = 1; i < argc; i++)
@@ -40,7 +42,25 @@ int main(int argc, char* argv[])
         }
     }
 
-    run_file(argv[argc-1]);
+    char* path = calloc(1, sizeof(char*));
+
+    for (int i = 1; i < argc; i++)
+    {
+        int len = strlen(argv[i]);
+        char* last_four = &argv[i][len-3];
+
+        path = realloc(path, sizeof(argv[i]) + 1);
+
+        strcat(path, argv[i]);
+        strcat(path, " ");
+
+        if (strcmp(last_four,".fn") == 0)
+        {
+            path[strlen(path)-1] = '\0';
+
+            run_file(path);
+        }
+    }
 
     return 0;
 }

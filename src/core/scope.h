@@ -25,4 +25,6 @@ AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* na
 
 AST_T* scope_remove_variable_definition(scope_T* scope, const char* name);
 
+void scope_free(scope_T* scope);
+
 #endif

@@ -10,5 +10,8 @@ int ast_sanity_check(AST_T* ast)
     if (ast->type > AST_NOOP)
         return 0;
 
+    if (ast->type < 0)
+        return 0;
+
     return 1;
 }

@@ -59,6 +59,8 @@ AST_T* parser_parse_number(parser_T* parser, scope_T* scope);
 
 AST_T* parser_parse_forloop(parser_T* parser, scope_T* scope);
 
+AST_T* parser_parse_foreach(parser_T* parser, scope_T* scope);
+
 AST_T* parser_parse_variable_setter(parser_T* parser, scope_T* scope);
 
 AST_T* parser_parse_dict_item(parser_T* parser, scope_T* scope);

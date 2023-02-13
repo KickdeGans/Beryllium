@@ -64,7 +64,7 @@ AST_T* parser_parse_statement(parser_T* parser, scope_T* scope)
     {
         return parser_parse_id(parser, scope);
     }
-    return (void*) 0;
+    return init_ast(AST_NOOP);
 }
 
 /* Parse compound */
@@ -77,7 +77,7 @@ AST_T* parser_parse_statements(parser_T* parser, scope_T* scope)
 
     AST_T* ast_statement = parser_parse_statement(parser, scope);
 
-    if (ast_statement == (void*) 0)
+    if (ast_statement->type == AST_NOOP)
     {
         return init_ast(AST_NOOP);
     }
@@ -97,7 +97,7 @@ AST_T* parser_parse_statements(parser_T* parser, scope_T* scope)
 
         AST_T* ast_statement = parser_parse_statement(parser, scope);
 
-        if (ast_statement)
+        if (ast_statement->type != AST_NOOP)
         {
             compound->compound_size += 1;
             compound->compound_value = realloc(
@@ -319,11 +319,6 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
         type = AST_NOOP;
         parser_eat(parser, TOKEN_ID);
     }
-    else if (strcmp(parser->current_token->value, "steam") == 0)
-    {
-        type = AST_STREAM;
-        parser_eat(parser, TOKEN_ID);
-    }
     
     char* variable_definition_variable_name = parser->current_token->value;
     if (!is_valid_name(variable_definition_variable_name))
@@ -450,6 +445,12 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
     if (strcmp(ast->statement_definition_type, "for") == 0)
     {
         AST_T* arg = parser_parse_forloop(parser, scope);
+        ast->statement_definition_args_size += 1;
+        ast->statement_definition_args[ast->statement_definition_args_size-1] = arg;
+    }
+    else if (strcmp(ast->statement_definition_type, "foreach") == 0)
+    {
+        AST_T* arg = parser_parse_foreach(parser, scope);
         ast->statement_definition_args_size += 1;
         ast->statement_definition_args[ast->statement_definition_args_size-1] = arg;
     }
@@ -792,7 +793,7 @@ AST_T* parser_parse_forloop(parser_T* parser, scope_T* scope)
 {
     AST_T* ast_forloop = init_ast(AST_FORLOOP);
 
-    ast_forloop->forloop_variable_definition = parser_parse_variable_definition(parser, scope);
+    ast_forloop->forloop_variable_definition = parser_parse_statement(parser, scope);
 
     parser_eat(parser, TOKEN_SEMI);
 
@@ -800,9 +801,23 @@ AST_T* parser_parse_forloop(parser_T* parser, scope_T* scope)
 
     parser_eat(parser, TOKEN_SEMI);
 
-    ast_forloop->forloop_variable_modifier = parser_parse_variable_setter(parser, scope);
+    ast_forloop->forloop_variable_modifier = parser_parse_statement(parser, scope);
 
     return ast_forloop;
+}
+
+AST_T* parser_parse_foreach(parser_T* parser, scope_T* scope)
+{
+    AST_T* ast_foreach = init_ast(AST_FOREACH);
+
+    ast_foreach->foreach_variable_name = parser->current_token->value;
+
+    parser_eat(parser, TOKEN_ID);
+    parser_eat(parser, TOKEN_POINT);
+
+    ast_foreach->foreach_source = parser_parse_expr(parser, scope);
+
+    return ast_foreach;
 }
 
 /* Parse a variable setter */
@@ -869,7 +884,8 @@ AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
              strcmp(parser->current_token->value, "until") == 0 ||
              strcmp(parser->current_token->value, "dowhile") == 0 ||
              strcmp(parser->current_token->value, "dountil") == 0 ||
-             strcmp(parser->current_token->value, "for") == 0)
+             strcmp(parser->current_token->value, "for") == 0 ||
+             strcmp(parser->current_token->value, "foreach") == 0)
     {
         return parser_parse_statement_definition(parser, scope);
     }
