@@ -37,7 +37,8 @@ typedef struct TOKEN_STRUCT
         TOKEN_PERCENT,
         TOKEN_POINT,
         TOKEN_DOUBLE_PLUS,
-        TOKEN_DOUBLE_MINUS
+        TOKEN_DOUBLE_MINUS,
+        TOKEN_END
     } type;
 
     char* value;

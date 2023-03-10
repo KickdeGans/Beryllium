@@ -4,6 +4,8 @@
 #include "../lib/io.h"
 #include "thread.h"
 #include "../lib/http.h"
+#include "array.h"
+#include "typename.h"
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -66,7 +68,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
     {
         if (args_size != 1)
         {
-            printf("\nruntime error:\n    function 'exit()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'exit()' takes 1 argument\n");
             exit(1);
         }
 
@@ -78,7 +80,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
     {
         if (args_size != 1)
         {
-            printf("\nruntime error:\n    function 'system()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'system()' takes 1 argument\n");
             exit(1);
         }
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
@@ -120,7 +122,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
     {
         if (args_size != 1)
         {
-            printf("\nruntime error:\n    function 'sleep()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'sleep()' takes 1 argument\n");
             exit(1);
         }
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
@@ -132,29 +134,14 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
     {
         AST_T* header = visitor_visit(visitor, args[0]);
         AST_T* ast = init_ast(AST_STRING);
-        ast->string_value = http_request(header->string_value);
-        return ast;
-    }
-    if (strcmp(node->function_call_name, "strcat") == 0)
-    {
-        if (args_size != 2)
-        {
-            printf("\nruntime error:\n    function 'strcat()' takes 2 arguments\n");
-            exit(1);
-        }
-        AST_T* a = visitor_visit(visitor, args[0]);
-        AST_T* b = visitor_visit(visitor, args[1]);
-        char* res = malloc(sizeof(a->string_value)+sizeof(b->string_value)+1);
-        sprintf(res, "%s%s", a->string_value, b->string_value);
-        AST_T* ast = init_ast(AST_STRING);
-        ast->string_value = res;
+        ast->string_value = http_request(header->string_value, NULL, 0);
         return ast;
     }
     if (strcmp(node->function_call_name, "typeof") == 0)
     {
         if (args_size != 1)
         {
-            printf("\nruntime error:\n    function 'typeof()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'typeof()' takes 1 argument\n");
             exit(1);
         }
         AST_T* inp = visitor_visit(visitor, args[0]);
@@ -167,6 +154,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
             case AST_LONG: res->ast_int = 0x32006; break;
             case AST_ARRAY: res->ast_int = 0x32004; break;
             case AST_STREAM: res->ast_int = 0x32005; break;
+            case AST_BOOLEAN: res->ast_int = 0x32003; break;
             default: res->ast_int = -2; break;
         }
         return res;
@@ -175,7 +163,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
     {
         if (args_size != 2)
         {
-            printf("\nruntime error:\n    function 'open()' takes 2 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'open()' takes 2 argument\n");
             exit(1);
         }
         AST_T* ast = init_ast(AST_STREAM);
@@ -188,7 +176,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
     {
         if (args_size != 1)
         {
-            printf("\nruntime error:\n    function 'close()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'close()' takes 1 argument\n");
             exit(1);
         }
         FILE* stream = visitor_visit(visitor, args[0])->stream;
@@ -201,9 +189,10 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
     {
         if (args_size != 2)
         {
-            printf("\nruntime error:\n    function 'write()' takes 2 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'write()' takes 2 argument\n");
             exit(1);
         }
+        
         AST_T* stream = visitor_visit(visitor, args[0]);
         AST_T* value = visitor_visit(visitor, args[1]);
         
@@ -218,8 +207,22 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
 
             return ast;
         }
+        if (stream->type == AST_ARRAY)
+        {
+            AST_T* array = stream;
 
-        fprintf(stream->stream, value->string_value);
+            append_array(array->array_value, value, &stream->array_size);
+
+            return array; 
+        }
+        
+        if (stream->type != AST_STREAM)
+        {
+            printf("\n\033[0;31mruntime error:\033[0;37m\n    stream value must be type stream\n");
+            exit(1);
+        }
+
+        fprintf(stream->stream, "%s", value->string_value);
 
         return init_ast(AST_NOOP);
     }
@@ -227,7 +230,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
     {
         if (args_size != 1)
         {
-            printf("\nruntime error:\n    function 'read()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'read()' takes 1 argument\n");
             exit(1);
         }
         FILE* stream = visitor_visit(visitor, args[0])->stream;

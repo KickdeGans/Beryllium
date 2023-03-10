@@ -100,6 +100,11 @@ AST_T* scope_get_variable_definition(scope_T* scope, const char* name)
     {
         AST_T* vdef = scope->variable_definitions[i];
 
+        if (vdef == (void*) 0)
+        {
+            return (void*) 0;
+        }
+
         if (strcmp(vdef->variable_definition_variable_name, name) == 0)
         {
             return vdef;
@@ -129,6 +134,11 @@ AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* na
     {
         AST_T* vdef_ = scope->variable_definitions[i];
         
+        if (vdef_ == (void*) 0)
+        {
+            return (void*) 0;
+        }
+
         if (strcmp(vdef_->variable_definition_variable_name, name) == 0)
         {
             if (scope->variable_definitions[i]->variable_definition_is_const)

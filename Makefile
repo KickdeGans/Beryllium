@@ -1,14 +1,15 @@
 core_files = src/*.c src/lib/*.c src/core/*.c src/runtime/*.c src/compiler/*.c
 packager_files = fusion-packages/main.c
+bundler_files = fusion-bundler/main.c
 core_name = fusion
 packager_name = fusion-packages/fusion-packages
 core_install_location = /bin/fusion
-packager_install_location = /bin/fusion_packages
+packager_install_location = /bin/fusion-packages
 core_libraries_folder = /bin/fusion-lib
 core_libraries_name = fusion-lib
 
 make:
-	gcc -Ofast -lm $(core_files) -o $(core_name)
+	gcc -O3 -lm $(core_files) -o $(core_name)
 	gcc $(packager_files) -o $(packager_name)
 
 install:
@@ -19,4 +20,4 @@ install:
 	cp $(packager_name) $(packager_install_location)
 
 dev:
-	gcc -Wall -ggdb -g -Werror -Ofast -lm $(core_files) -o $(core_name)
+	gcc -Wall -g -Werror -O3 -lm $(core_files) -o $(core_name)

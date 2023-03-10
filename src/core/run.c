@@ -44,3 +44,19 @@ void run_file(char* path)
 
     return;
 }
+
+void compile_only(char* path)
+{
+    char* file_contents = io_file_read(path);
+
+    lexer_T* lexer = init_lexer(file_contents);
+    parser_T* parser = init_parser(lexer);
+    AST_T* root = parser_parse(parser, parser->scope);
+
+    free(lexer);
+    free(parser);
+    free(file_contents);
+    ast_free(root);
+
+    return;
+}

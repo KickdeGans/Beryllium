@@ -1,0 +1,8 @@
+#!/bin/fusion
+
+proc main()
+{
+    println("Hello world!");
+}
+
+main();

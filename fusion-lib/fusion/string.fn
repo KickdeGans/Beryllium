@@ -74,66 +74,67 @@ public const string whitespace = " ";
 public const string nothing    = "";
 
 proc is_alpha(ch)
-{
-    for (i: lower_alpha)
+    foreach (i -> lower_alpha)
         if (ch == i)
             return 1;
-    for (i: upper_alpha)
+        end
+    end
+    foreach (i -> upper_alpha)
         if (ch == i)
             return 1;
+        end
+    end
     return 0;
-};
-
+end
 proc is_digit(ch)
-{
-    for (i: numbers)
+    foreach (i -> numbers)
         if (ch == i)
             return 1;
+        end
+    end
     return 0;
-};
+end
 
 proc is_whitespace(str)
-{
     if (str == whitespace)
         return 1;
+    end
 
     int whitespace_count = 0;
 
-    for (char: str)
-    {
-        if (is_whitespace(char))
+    foreach (ch -> str)
+        if (is_whitespace(ch))
             whitespace_count = whitespace_count + 1;
-    };
+        end
+    end
 
     return length(str) == whitespace_count;
-};
+end
 
 proc length(str_)
-{
-    if (typeof(str_) != str)
+    if (typeof(str_) != string)
         return 0;
+    end
 
     int len = 0;
     
-    for (i: str_)
+    foreach (i -> str_)
         len = len + 1;
-    
+    end
+
     return len + 1;
-};
+end
 
 proc concat(str1, str2)
-{
     return write(str1, str2);
-};
+end
 
 proc join(arr, sep)
-{
     string s;
 
-    for (i: arr)
-    {
+    foreach (i -> arr)
         s = concat(s, concat(i, sep));
-    };    
-
+    end
+    
     return s;
-};
+end

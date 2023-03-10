@@ -1,0 +1,11 @@
+foreach (x -> 10)
+    print(x);
+end
+
+foreach (x -> "Hello world!")
+    print(x);
+end
+
+foreach (x -> {"a", "b", "c"})
+    print(x);
+end

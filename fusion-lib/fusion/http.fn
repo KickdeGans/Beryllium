@@ -1,5 +1,4 @@
 proc http_get(host, addr) 
-{
     string header = "GET ";
 
     header = strcat(header, addr);
@@ -10,4 +9,4 @@ proc http_get(host, addr)
     println(header);
 
     return http(header);
-};
+end

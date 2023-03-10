@@ -1,0 +1,20 @@
+proc round(x)
+    println(x == array);
+
+    int sum = x[0];
+
+    int s = 0;
+
+    foreach (n -> sum)
+        s = s + 1;
+        sum = sum + n;
+    end
+
+    sum = sum - x[0];
+
+    return sum / s;
+end
+
+var a = { 5, 2, 3, 1 };
+
+println(round(a));

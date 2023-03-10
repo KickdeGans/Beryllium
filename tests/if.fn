@@ -2,10 +2,8 @@ int a = 5;
 int b = 5;
 
 if (a == b)
-{
     println("a equals b");
-}
+end
 else
-{
     println("a is not b");
-}
+end

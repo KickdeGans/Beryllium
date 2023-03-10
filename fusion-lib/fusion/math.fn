@@ -3,59 +3,55 @@ import "stdlib";
 public const double pi = 3.14159265358;
 
 proc octets_to_srgb(red, green, blue) 
-{
     return blue + 
            green + 
            (green * 255) + 
            (red * 65536);
-}
+end
 proc interpolate(a, b)
-{
-    return average({a, b});
-}
+    return average(a, bend);
+end
 proc average(array)
-{
     var res = 0;
-    for (i : array) res = res + i;
+
+    foreach (i -> array) 
+        res = res + i;
+    end
+
     return res / sizeof(array);
-}
+end
 proc is_even(x) 
-{
     return (x % 2) == 0;
-}
+end
 proc is_odd(x)
-{
     return (x % 2) != 0;
-}
+end
 proc abs(x)
-{
     if (x >= 0) 
         return x; 
+    end
     else 
         return x - (x * 2);
-}
+    end
+end
 proc invert(x)
-{
     return x - (x * 2);
-}
+end
 proc factorial(x)
-{
     int sum = 1;
-    for (i : x)
+    foreach (i -> x)
         sum = sum * i;
+    end
     return sum;
-}
+end
 proc power(x, y)
-{
     int sum = 1;
-    for (i : y)
-    {
+    foreach (i -> y)
         sum = sum * x;
-    };
+    end
     return sum;
-}
+end
 proc randrange(lower, upper)
-{
     int r = rand() + upper - lower;
     int x = upper - lower;
 
@@ -64,14 +60,13 @@ proc randrange(lower, upper)
     r = r + lower;
 
     while (r < lower)
-    {
         r = rand() + upper - lower;
         x = upper - lower;
         
         x = x + 1;
         r = r % x;
         r = r + lower;
-    }
+    end
 
     return r;
-}
+end

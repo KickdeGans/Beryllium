@@ -1,23 +1,26 @@
 <img src="Fusion-Logo.png" alt="alt text" title="image Title" width="250"/>
 
 # Fusion
-## Version 0.3-1
+## Version 0.3.3
 
-## A fast interpretted C like programming language
-### Linux specific interpretter
+## An interpretted programming language
 
 #### Tests: *In progess*
 
 ## Contents:
+[Getting started](https://github.com/KickdeGans/Fusion/wiki)
+<br>
 [Documentation](https://github.com/KickdeGans/Fusion/wiki/Documentation)
 <br>
 [Bult-in functions](https://github.com/KickdeGans/Fusion/wiki/Built-in-functions)
 <br>
-## Please read!
-This projects is still in development and contains incomplete or non functional features and bugs.<br>
-At the moment the virtual machine leaks LOTS of memory. Use with caution.<br>
+### Please read!
+This projects is still in development and contains incomplete or non functional features, bugs and incomplete libraries.<br>
+At the moment the virtual machine leaks lots of memory. Use with caution.<br>
 If there are any bugs you find, please notify me.<br>
-## Installation:
+Please note that ```file.fn``` and ```file2.fn``` are files for testing and not part of the program.<br>
+
+### Installation:
 #### Clone the repo:
 ```shell
 git clone https://www.github.com/KickdeGans/Fusion.git

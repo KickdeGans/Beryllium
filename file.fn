@@ -1,4 +1,13 @@
-foreach (i -> 10)
-{
-    println(i);
-}
+var array = {"a", "b", "c"};
+
+println(typeof(array) == int);
+
+foreach(j->array)
+    println(j);
+end
+
+array = write(array, "d");
+
+foreach(j->array)
+    println(j);
+end

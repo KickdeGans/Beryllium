@@ -23,7 +23,7 @@ lexer_T* init_lexer(char* contents)
 /* Get character from file */
 void lexer_advance(lexer_T* lexer)
 {
-    if (lexer->c != '\0' && lexer->i < strlen(lexer->contents))
+    if (lexer->c != '\0' && lexer->c != EOF && lexer->i < strlen(lexer->contents))
     {
         lexer->i += 1;
         lexer->prev_c = lexer->c;
@@ -37,7 +37,7 @@ void lexer_advance(lexer_T* lexer)
 /* Output: if(a==b){} */
 void lexer_skip_whitespace(lexer_T* lexer)
 {
-    while (lexer->c == ' ' || lexer->c == 10 || lexer->c == '	')
+    while (lexer->c == ' ' || lexer->c == 10 || lexer->c == '	' /* <<< That whitespace is for vim support */)
     {
         lexer_advance(lexer);
     }
@@ -46,7 +46,7 @@ void lexer_skip_whitespace(lexer_T* lexer)
 /* Skip comment */
 void lexer_skip_comment(lexer_T* lexer)
 {
-    while (lexer->c != '#')
+    while (lexer->c != '\n' && lexer->c != '\0' && lexer->c != EOF && lexer->c != 0)
     {
         lexer_advance(lexer);
     }
@@ -207,6 +207,11 @@ token_T* lexer_collect_id(lexer_T* lexer)
     {
         printf("\ncompilation error:\n    invalid identifier name '%s' at line %d\n", value, lexer->current_line);
         exit(1);
+    }
+
+    if (strcmp(value, "end") == 0)
+    {
+        return init_token(TOKEN_END, value);
     }
 
     return init_token(TOKEN_ID, value);

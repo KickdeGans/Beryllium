@@ -61,9 +61,8 @@ AST_T* parser_parse(parser_T* parser, scope_T* scope)
 AST_T* parser_parse_statement(parser_T* parser, scope_T* scope)
 {
     if (parser->current_token->type == TOKEN_ID)
-    {
         return parser_parse_id(parser, scope);
-    }
+    
     return init_ast(AST_NOOP);
 }
 
@@ -89,24 +88,26 @@ AST_T* parser_parse_statements(parser_T* parser, scope_T* scope)
     while (parser->current_token->type == TOKEN_SEMI || !parser->require_semicolon)
     {
         if (parser->require_semicolon)
-        {
             parser_eat(parser, TOKEN_SEMI);
-        }
-
+        
         parser->require_semicolon = 1;
 
         AST_T* ast_statement = parser_parse_statement(parser, scope);
 
-        if (ast_statement->type != AST_NOOP)
-        {
-            compound->compound_size += 1;
-            compound->compound_value = realloc(
-                compound->compound_value,
-                compound->compound_size * sizeof(struct AST_STRUCT*)
-            );
-            compound->compound_value[compound->compound_size-1] = ast_statement;
-        }
+        if (ast_statement->type == AST_NOOP)
+            return compound;
+
+        compound->compound_size += 1;
+        compound->compound_value = realloc(
+            compound->compound_value,
+            compound->compound_size * sizeof(struct AST_STRUCT*)
+        );
+        compound->compound_value[compound->compound_size-1] = ast_statement;
+
+        if (parser->current_token->type == TOKEN_END)
+            return compound;
     }
+
     return compound;
 }
 
@@ -118,6 +119,7 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
         if (parser->current_token->type == TOKEN_RBRACKET ||
             parser->current_token->type == TOKEN_RPAREN ||
             parser->current_token->type == TOKEN_RBRACE ||
+            parser->current_token->type == TOKEN_END ||
             parser->current_token->type == TOKEN_COMMA ||
             parser->current_token->type == TOKEN_SEMI)
             break;
@@ -293,26 +295,57 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
     {
         type = AST_INT;
         parser_eat(parser, TOKEN_ID);
+
+        if (parser->current_token->type != TOKEN_ID)
+        {
+            AST_T* ast = init_ast(AST_INT);
+            ast->ast_int = 0x32000;
+            ast->scope = scope;
+
+            return ast;
+        }
     }
     else if (strcmp(parser->current_token->value, "double") == 0)
     {
         type = AST_DOUBLE;
         parser_eat(parser, TOKEN_ID);
-    }
-    else if (strcmp(parser->current_token->value, "long") == 0)
-    {
-        type = AST_LONG;
-        parser_eat(parser, TOKEN_ID);
+
+        if (parser->current_token->type != TOKEN_ID)
+        {
+            AST_T* ast = init_ast(AST_INT);
+            ast->ast_int = 0x32001;
+            ast->scope = scope;
+
+            return ast;
+        }
     }
     else if (strcmp(parser->current_token->value, "bool") == 0)
     {
         type = AST_BOOLEAN;
         parser_eat(parser, TOKEN_ID);
+
+        if (parser->current_token->type != TOKEN_ID)
+        {
+            AST_T* ast = init_ast(AST_INT);
+            ast->ast_int = 0x32003;
+            ast->scope = scope;
+
+            return ast;
+        }
     }
     else if (strcmp(parser->current_token->value, "string") == 0)
     {
         type = AST_STRING;
         parser_eat(parser, TOKEN_ID);
+
+        if (parser->current_token->type != TOKEN_ID)
+        {
+            AST_T* ast = init_ast(AST_INT);
+            ast->ast_int = 0x32002;
+            ast->scope = scope;
+
+            return ast;
+        }
     }
     else if (strcmp(parser->current_token->value, "var") == 0)
     {
@@ -353,9 +386,8 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
 /* Example: */
 /* 
 fn hello() 
-{
     println("Hello world!");
-} 
+end
 */
 AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
 {
@@ -388,19 +420,14 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
             ast->function_definition_args[ast->function_definition_args_size-1] = arg;
         }
     }
-    parser_eat(parser, TOKEN_RPAREN);
-    if (parser->current_token->type != TOKEN_LBRACE)
-    {
-        ast->function_definition_body = parser_parse_statement(parser, scope);
-    }
-    else
-    {
-        parser_eat(parser, TOKEN_LBRACE);
-        ast->function_definition_body = parser_parse_statements(parser, scope);
-        parser_eat(parser, TOKEN_RBRACE);
 
-        parser->require_semicolon = 0;
-    }
+    parser_eat(parser, TOKEN_RPAREN);
+
+    ast->function_definition_body = parser_parse_statements(parser, scope);
+
+    parser->require_semicolon = 0;
+
+    parser_eat(parser, TOKEN_END);
     
     ast->scope = scope;
     return ast;
@@ -410,9 +437,8 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
 /* Example: */
 /*
 if (condition)
-{
     doSomething();
-}
+end
 */
 AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
 {
@@ -424,16 +450,8 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
     strcpy(ast->statement_definition_type, type);
     if (strcmp(type, "else") == 0)
     {
-        if (parser->current_token->type != TOKEN_LBRACE)
-        {
-            ast->statement_definition_body = parser_parse_statement(parser, scope);
-        }
-        else
-        {
-            parser_eat(parser, TOKEN_LBRACE);
-            ast->statement_definition_body = parser_parse_statements(parser, scope);
-            parser_eat(parser, TOKEN_RBRACE);
-        }
+        ast->statement_definition_body = parser_parse_statements(parser, scope);
+        parser_eat(parser, TOKEN_END);
 
         ast->scope = scope;
         
@@ -461,60 +479,12 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
         ast->statement_definition_args[ast->statement_definition_args_size-1] = arg;
     }
     parser_eat(parser, TOKEN_RPAREN);
-    if (parser->current_token->type != TOKEN_LBRACE)
-    {
-        ast->statement_definition_body = parser_parse_statement(parser, scope);
-    }
-    else
-    {
-        parser_eat(parser, TOKEN_LBRACE);
-        ast->statement_definition_body = parser_parse_statements(parser, scope);
-        parser_eat(parser, TOKEN_RBRACE);
+    ast->statement_definition_body = parser_parse_statements(parser, scope);
+    parser_eat(parser, TOKEN_END);
 
-        parser->require_semicolon = 0;
-    }
+    parser->require_semicolon = 0;
 
     ast->scope = scope;
-    return ast;
-}
-
-/* Parse struct definition (custom data type) */
-/* Example: */
-/* 
-struct myType
-{
-    string name;
-    int age;
-}
-*/
-AST_T* parse_parse_struct_definition(parser_T* parser, scope_T* scope)
-{
-    AST_T* ast = init_ast(AST_STRUCT_DEFINITION);
-    
-    parser_eat(parser, TOKEN_ID);
-
-    ast->struct_definition_name = parser->current_token->value;
-
-    parser_eat(parser, TOKEN_ID);
-    parser_eat(parser, TOKEN_LBRACE);
-
-    ast->struct_definition_content = calloc(1, sizeof(struct AST_STRUCT*));
-    ast->struct_definition_content_size += 1;
-    ast->struct_definition_content[0] = parser_parse_variable_definition(parser, scope);
-
-    while (parser->current_token->type == TOKEN_SEMI)
-    {
-        parser_eat(parser, TOKEN_SEMI);
-        ast->struct_definition_content = realloc(
-            ast->struct_definition_content, 
-            ast->struct_definition_content_size * sizeof(struct AST_STRUCT*)
-        );
-        ast->struct_definition_content_size += 1;
-        ast->struct_definition_content[ast->struct_definition_content_size-1] = parser_parse_variable_definition(parser, scope);
-    }
-
-    parser_eat(parser, TOKEN_RBRACE);
-
     return ast;
 }
 
@@ -595,47 +565,7 @@ AST_T* parser_parse_variable(parser_T* parser, scope_T* scope)
 
         return ast;
     }
-    if (strcmp(token_value, "int32") == 0)
-    {
-        AST_T* ast = init_ast(AST_INT);
-        ast->ast_int = 0x32000;
-        ast->scope = scope;
-
-        return ast;
-    }
-    if (strcmp(token_value, "int64") == 0)
-    {
-        AST_T* ast = init_ast(AST_INT);
-        ast->ast_int = 0x32006;
-        ast->scope = scope;
-
-        return ast;
-    }
-    if (strcmp(token_value, "double32") == 0)
-    {
-        AST_T* ast = init_ast(AST_INT);
-        ast->ast_int = 0x32001;
-        ast->scope = scope;
-
-        return ast;
-    }
-    if (strcmp(token_value, "str") == 0)
-    {
-        AST_T* ast = init_ast(AST_INT);
-        ast->ast_int = 0x32002;
-        ast->scope = scope;
-
-        return ast;
-    }
-    if (strcmp(token_value, "int1") == 0)
-    {
-        AST_T* ast = init_ast(AST_INT);
-        ast->ast_int = 0x32003;
-        ast->scope = scope;
-
-        return ast;
-    }
-    if (strcmp(token_value, "arr") == 0)
+    if (strcmp(token_value, "array") == 0)
     {
         AST_T* ast = init_ast(AST_INT);
         ast->ast_int = 0x32004;
@@ -647,14 +577,6 @@ AST_T* parser_parse_variable(parser_T* parser, scope_T* scope)
     {
         AST_T* ast = init_ast(AST_INT);
         ast->ast_int = 0x32005;
-        ast->scope = scope;
-
-        return ast;
-    }
-    if (strcmp(token_value, "char") == 0)
-    {
-        AST_T* ast = init_ast(AST_INT);
-        ast->ast_int = 0x32006;
         ast->scope = scope;
 
         return ast;
@@ -775,6 +697,9 @@ AST_T* parser_parse_number(parser_T* parser, scope_T* scope)
         AST_T* ast_number = init_ast(AST_INT);
         ast_number->ast_int = atoi(parser->current_token->value);
         parser_eat(parser, TOKEN_NUMBER);
+
+        ast_number->scope = scope;
+
         return ast_number;
     }
     else
@@ -782,6 +707,9 @@ AST_T* parser_parse_number(parser_T* parser, scope_T* scope)
         AST_T* ast_number = init_ast(AST_DOUBLE);
         ast_number->ast_double = strtod(parser->current_token->value, NULL);
         parser_eat(parser, TOKEN_NUMBER);
+
+        ast_number->scope = scope;
+
         return ast_number;
     }
 
@@ -802,6 +730,9 @@ AST_T* parser_parse_forloop(parser_T* parser, scope_T* scope)
     parser_eat(parser, TOKEN_SEMI);
 
     ast_forloop->forloop_variable_modifier = parser_parse_statement(parser, scope);
+    ast_forloop->forloop_variable_modifier->scope = scope;
+
+    ast_forloop->scope = scope;
 
     return ast_forloop;
 }
@@ -816,6 +747,9 @@ AST_T* parser_parse_foreach(parser_T* parser, scope_T* scope)
     parser_eat(parser, TOKEN_POINT);
 
     ast_foreach->foreach_source = parser_parse_expr(parser, scope);
+    ast_foreach->foreach_source->scope = scope;
+
+    ast_foreach->scope = scope;
 
     return ast_foreach;
 }
@@ -871,13 +805,11 @@ AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
         strcmp(parser->current_token->value, "stream") == 0 ||
         strcmp(parser->current_token->value, "public") == 0 ||
         strcmp(parser->current_token->value, "const") == 0)
-    {
         return parser_parse_variable_definition(parser, scope);
-    }
+
     else if (strcmp(parser->current_token->value, "proc") == 0)
-    {
         return parser_parse_function_definition(parser, scope);
-    }
+
     else if (strcmp(parser->current_token->value, "if") == 0 ||
              strcmp(parser->current_token->value, "else") == 0 ||
              strcmp(parser->current_token->value, "while") == 0 ||
@@ -886,23 +818,15 @@ AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
              strcmp(parser->current_token->value, "dountil") == 0 ||
              strcmp(parser->current_token->value, "for") == 0 ||
              strcmp(parser->current_token->value, "foreach") == 0)
-    {
         return parser_parse_statement_definition(parser, scope);
-    }
+
     else if (strcmp(parser->current_token->value, "return") == 0||
              strcmp(parser->current_token->value, "break") == 0||
              strcmp(parser->current_token->value, "continue") == 0||
              strcmp(parser->current_token->value, "import") == 0||
              strcmp(parser->current_token->value, "include") == 0)
-    {
         return parser_parse_statement_call(parser, scope);
-    }
-    else if (strcmp(parser->current_token->value, "struct") == 0)
-    {
-        return parse_parse_struct_definition(parser, scope);
-    }
+
     else
-    {
         return parser_parse_variable(parser, scope);
-    }
 }
