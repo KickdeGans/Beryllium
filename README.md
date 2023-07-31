@@ -16,9 +16,7 @@
 <br>
 ### Please read!
 This projects is still in development and contains incomplete or non functional features, bugs and incomplete libraries.<br>
-At the moment the virtual machine leaks lots of memory. Use with caution.<br>
 If there are any bugs you find, please notify me.<br>
-Please note that ```file.fn``` and ```file2.fn``` are files for testing and not part of the program.<br>
 
 ### Installation:
 #### Clone the repo:
