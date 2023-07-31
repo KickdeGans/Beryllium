@@ -1,9 +1,9 @@
-#include "builtin_functions.h"
+#include "builtin.h"
 #include "visitor.h"
 #include "../core/AST.h"
 #include "../lib/io.h"
-#include "thread.h"
 #include "../lib/http.h"
+#include "../lib/string.h"
 #include "array.h"
 #include "typename.h"
 #include <unistd.h>
@@ -14,61 +14,52 @@
 #include <sys/time.h>
 
 AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
-{
+{  
     AST_T** args = node->function_call_arguments;
     size_t args_size = node->function_call_arguments_size;
-    
-    if (strcmp(node->function_call_name, "print") == 0)
-    {
-        for (size_t i = 0; i < args_size; i++)
-        {
-            AST_T* visited_ast = visitor_visit(visitor, args[i]);
-            switch (visited_ast->type)
-            {
-                case AST_STRING: printf("%s", visited_ast->string_value); break;
-                case AST_INT: printf("%i", visited_ast->ast_int); break;
-                case AST_DOUBLE: printf("%f", visited_ast->ast_double); break;
-                case AST_BOOLEAN:
-                    switch (visited_ast->boolean_value)
-                    {
-                        case 1: printf("true"); break;
-                        case 0: printf("false"); break;
-                    }
-                    break;
-                default: break;
-            }
-        }
-        return init_ast(AST_NOOP);
-    }
-    if (strcmp(node->function_call_name, "println") == 0)
-    {
-        for (size_t i = 0; i < args_size; i++)
-        {
-            AST_T* visited_ast = visitor_visit(visitor, args[i]);
-            switch (visited_ast->type)
-            {
-                case AST_STRING: printf("%s", visited_ast->string_value); break;
-                case AST_INT: printf("%i", visited_ast->ast_int); break;
-                case AST_DOUBLE: printf("%f", visited_ast->ast_double); break;
-                case AST_BOOLEAN:
-                    switch (visited_ast->boolean_value)
-                    {
-                        case 1: printf("true"); break;
-                        case 0: printf("false"); break;
-                    }
-                    break;
-                default: break;
-            }
-        }
-        printf("\n");
-        return init_ast(AST_NOOP);
-    }
 
-    if (strcmp(node->function_call_name, "exit") == 0)
+    if (fast_compare(node->function_call_name, "puts") == 0)
+    {
+        for (size_t i = 0; i < args_size; i++)
+        {
+            AST_T* visited_ast = visitor_visit(visitor, args[i]);
+            switch (visited_ast->type)
+            {
+                case AST_STRING: printf("%s", visited_ast->string_value); break;
+                case AST_INT: printf("%i", visited_ast->ast_int); break;
+                case AST_DOUBLE: printf("%f", visited_ast->ast_double); break;
+                case AST_BOOLEAN:
+                    switch (visited_ast->boolean_value)
+                    {
+                        case 1: printf("true"); break;
+                        case 0: printf("false"); break;
+                    }
+                    break;
+                default: break;
+            }
+        }
+        return init_ast(AST_NOOP);
+    }
+    if (fast_compare(node->function_call_name, "putstrln") == 0)
     {
         if (args_size != 1)
         {
-            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'exit()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0m\n    function 'putstrln()' takes 1 argument\n");
+            exit(1);
+        }
+
+        AST_T* visited_ast = visitor_visit(visitor, args[0]);
+
+        puts(visited_ast->string_value);
+
+        return init_ast(AST_NOOP);
+    }
+
+    if (fast_compare(node->function_call_name, "exit") == 0)
+    {
+        if (args_size != 1)
+        {
+            printf("\n\033[0;31mruntime error:\033[0m\n    function 'exit()' takes 1 argument\n");
             exit(1);
         }
 
@@ -76,11 +67,11 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         exit(visited_ast->ast_int);
     }
 
-    if (strcmp(node->function_call_name, "system") == 0)
+    if (fast_compare(node->function_call_name, "system") == 0)
     {
         if (args_size != 1)
         {
-            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'system()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0m\n    function 'system()' takes 1 argument\n");
             exit(1);
         }
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
@@ -89,7 +80,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         return ast;
     }
 
-    if (strcmp(node->function_call_name, "input") == 0)
+    if (fast_compare(node->function_call_name, "input") == 0)
     {
         AST_T* ast = init_ast(AST_STRING);
         for (size_t i = 0; i < args_size; i++)
@@ -118,11 +109,11 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         ast->string_value[strlen(ast->string_value) - 1] = '\0';
         return ast;
     }
-    if (strcmp(node->function_call_name, "sleep") == 0)
+    if (fast_compare(node->function_call_name, "sleep") == 0)
     {
         if (args_size != 1)
         {
-            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'sleep()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0m\n    function 'sleep()' takes 1 argument\n");
             exit(1);
         }
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
@@ -130,18 +121,18 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         usleep(visited_ast->ast_int * 1000);
         return visited_ast;
     }
-    if (strcmp(node->function_call_name, "http") == 0)
+    if (fast_compare(node->function_call_name, "http") == 0)
     {
         AST_T* header = visitor_visit(visitor, args[0]);
         AST_T* ast = init_ast(AST_STRING);
         ast->string_value = http_request(header->string_value, NULL, 0);
         return ast;
     }
-    if (strcmp(node->function_call_name, "typeof") == 0)
+    if (fast_compare(node->function_call_name, "typeof") == 0)
     {
         if (args_size != 1)
         {
-            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'typeof()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0m\n    function 'typeof()' takes 1 argument\n");
             exit(1);
         }
         AST_T* inp = visitor_visit(visitor, args[0]);
@@ -159,11 +150,11 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         }
         return res;
     }
-    if (strcmp(node->function_call_name, "open") == 0)
+    if (fast_compare(node->function_call_name, "open") == 0)
     {
         if (args_size != 2)
         {
-            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'open()' takes 2 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0m\n    function 'open()' takes 2 argument\n");
             exit(1);
         }
         AST_T* ast = init_ast(AST_STREAM);
@@ -172,11 +163,11 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
 
         return ast;
     }
-    if (strcmp(node->function_call_name, "close") == 0)
+    if (fast_compare(node->function_call_name, "close") == 0)
     {
         if (args_size != 1)
         {
-            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'close()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0m\n    function 'close()' takes 1 argument\n");
             exit(1);
         }
         FILE* stream = visitor_visit(visitor, args[0])->stream;
@@ -185,11 +176,11 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
 
         return init_ast(AST_NOOP);
     }
-    if (strcmp(node->function_call_name, "write") == 0)
+    if (fast_compare(node->function_call_name, "write") == 0)
     {
         if (args_size != 2)
         {
-            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'write()' takes 2 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0m\n    function 'write()' takes 2 argument\n");
             exit(1);
         }
         
@@ -215,22 +206,16 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
 
             return array; 
         }
-        
-        if (stream->type != AST_STREAM)
-        {
-            printf("\n\033[0;31mruntime error:\033[0;37m\n    stream value must be type stream\n");
-            exit(1);
-        }
 
         fprintf(stream->stream, "%s", value->string_value);
 
-        return init_ast(AST_NOOP);
+        return stream;
     }
-    if (strcmp(node->function_call_name, "read") == 0)
+    if (fast_compare(node->function_call_name, "read") == 0)
     {
         if (args_size != 1)
         {
-            printf("\n\033[0;31mruntime error:\033[0;37m\n    function 'read()' takes 1 argument\n");
+            printf("\n\033[0;31mruntime error:\033[0m\n    function 'read()' takes 1 argument\n");
             exit(1);
         }
         FILE* stream = visitor_visit(visitor, args[0])->stream;
@@ -275,14 +260,14 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
 
         return init_ast(AST_NOOP);
     }
-    if (strcmp(node->function_call_name, "remove") == 0)
+    if (fast_compare(node->function_call_name, "remove") == 0)
     {
         char* file = visitor_visit(visitor, args[0])->string_value;
         AST_T* res = init_ast(AST_INT);
         res->ast_int = remove(file);
         return res;
     }
-    if (strcmp(node->function_call_name, "rand") == 0)
+    if (fast_compare(node->function_call_name, "rand") == 0)
     {
         AST_T* ast = init_ast(AST_INT);
 
@@ -290,6 +275,6 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         
         return ast;
     }
-    
+
     return (void*) 0;
 }

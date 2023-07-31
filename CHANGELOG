@@ -1,0 +1,12 @@
+Version 0.4 | Release date: July 31 2023:
+
+Variables are properly managed 
+Add garbage collection
+Change syntax:
+    proc -> fun
+Change names of functions:
+    print -> puts
+    println -> putstrln
+Update license: GPL 2 -> GPL 3
+Add attributes to variables and functions
+    Still in development and has some bugs.

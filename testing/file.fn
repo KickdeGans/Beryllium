@@ -1,0 +1,4 @@
+fun main()
+{
+    putstrln("a".concat("b").concat("c"));
+}

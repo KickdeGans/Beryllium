@@ -161,7 +161,7 @@ token_T* lexer_collect_string(lexer_T* lexer)
     while (lexer->c != '"')
     {
         char* s = lexer_get_current_char_as_string(lexer);
-        if (strcmp(s, "\\") == 0)
+        if (fast_compare(s, "\\") == 0)
         {
             lexer_advance(lexer);
             switch (lexer->c)
@@ -174,10 +174,29 @@ token_T* lexer_collect_string(lexer_T* lexer)
                 case 'a': s = "\a"; break;
                 case 't': s = "\t"; break;
                 case 'v': s = "\v"; break;
-                case '0': s = "\0"; break;
+                case '0': 
+                    lexer_advance(lexer);
+                    if (lexer->c == '3')
+                    {
+                        lexer_advance(lexer);
+                        if (lexer->c == '3')
+                        {
+                            s = "\033";
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        lexer->i--;
+                        lexer->prev_c = lexer->c;
+                        lexer->c = lexer->contents[lexer->i];
+                    }
+
+                    s = "\0"; break;
                 case '\\': s = "\\"; break;
             }
         }
+
         value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
         strcat(value, s);
 
@@ -209,7 +228,7 @@ token_T* lexer_collect_id(lexer_T* lexer)
         exit(1);
     }
 
-    if (strcmp(value, "end") == 0)
+    if (fast_compare(value, "end") == 0)
     {
         return init_token(TOKEN_END, value);
     }

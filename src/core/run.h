@@ -8,7 +8,6 @@
 #include "../lib/io.h"
 
 void set_rand();
-void run_file(char* path);
-void compile_only(char* path);
+void run_file(char* path, char** args);
 
 #endif

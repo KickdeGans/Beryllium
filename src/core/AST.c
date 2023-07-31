@@ -8,19 +8,18 @@ AST_T* init_ast(int type)
     
     ast->type = type;
     ast->scope = (void*) 0;
-    ast->private_scope = init_scope();
+    ast->private_scope = (void*) 0;
     ast->is_return_value = 0;
     ast->break_ = 0;
     ast->continue_ = 0;
     ast->is_private = 0;
-  
+    ast->is_root_compound = 0;
+
     /*  AST_VARIABLE_DEFINITION */
     ast->variable_definition_variable_name = (void*) 0;
     ast->variable_definition_value = (void*) 0;
-    ast->variable_definition_value_type = AST_NOOP;
     ast->variable_definition_is_public = 0;
     ast->variable_definition_is_const = 0;
-    ast->variable_definition_is_weak = 0;
   
     /*  AST_FUNCTION_DEFINITION */
     ast->function_definition_body = (void*) 0;
@@ -32,7 +31,6 @@ AST_T* init_ast(int type)
     ast->statement_definition_body = (void*) 0;
     ast->statement_definition_type = (void*) 0;
     ast->statement_definition_args = (void*) 0;
-    ast->statement_definition_args_size = 0;
 
     /* AST_STRUCT_DEFINITION */
     ast->struct_definition_name = (void*) 0;

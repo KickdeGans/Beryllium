@@ -1,7 +1,7 @@
 <img src="Fusion-Logo.png" alt="alt text" title="image Title" width="250"/>
 
 # Fusion
-## Version 0.3.3
+## Version 0.4
 
 ## An interpretted programming language
 
@@ -25,17 +25,31 @@ Please note that ```file.fn``` and ```file2.fn``` are files for testing and not 
 ```shell
 git clone https://www.github.com/KickdeGans/Fusion.git
 ```
-#### Install:
+#### Build and install using GCC:
 ```shell
 ./configure
 make
 make install
 ```
-#### Test:
+#### Build and install using clang:
 ```shell
-fusion --verify
+./configure
+make clang
+make install
+```
+#### For debugging using gdb (GCC only):
+```shell
+./configure
+make debug
+make install
 ```
 
-<br>
-
-This project is a fork of https://github.com/sebbekarlsson/hello
+### Debugging:
+Run ```./debug``` to debug Fusion.
+Make sure the script has permissions to be executed
+#### Requirements:
+```
+Linux
+gdb
+gcc
+```

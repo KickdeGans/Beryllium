@@ -1,3 +1,4 @@
+#include "string.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -18,5 +19,12 @@ int contains_char(char* str, char find)
         if (str[i] == find)
             return 1;
     }
+    return 0;
+}
+int fast_compare(const char *str, const char *cmp)
+{
+    while (*str) 
+        if (*str++ != *cmp++)
+            return 1;
     return 0;
 }

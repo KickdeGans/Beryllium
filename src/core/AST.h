@@ -49,14 +49,13 @@ typedef struct AST_STRUCT
     int break_;
     int continue_;
     int is_private;
+    int is_root_compound;
 
     /* AST_VARIABLE_DEFINITION */
     char* variable_definition_variable_name;
     struct AST_STRUCT* variable_definition_value;
     int variable_definition_is_public;
     int variable_definition_is_const;
-    int variable_definition_value_type;
-    int variable_definition_is_weak;
 
     /* AST_FUNCTION_DEFINITION */
     struct AST_STRUCT* function_definition_body;
@@ -67,8 +66,7 @@ typedef struct AST_STRUCT
     /* AST_STATEMENT_DEFINITION */
     struct AST_STRUCT* statement_definition_body;
     char* statement_definition_type;
-    struct AST_STRUCT** statement_definition_args;
-    size_t statement_definition_args_size;
+    struct AST_STRUCT* statement_definition_args;
 
     /* AST_STRUCT_DEFINITION */
     char* struct_definition_name;

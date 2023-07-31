@@ -7,6 +7,7 @@ typedef struct VISITOR_STRUCT
 {
     struct SCOPE_STRUCT* scope;
     int prev_statement_value;
+    char** args;
 } visitor_T;
 
 visitor_T* init_visitor();

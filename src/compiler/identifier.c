@@ -4,7 +4,7 @@
 #include "../core/AST.h"
 #include "identifier.h"
 
-char* allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMnOPQRSTUVWXYZ0123456789_.";
+char* allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMnOPQRSTUVWXYZ0123456789_";
 
 /* Check if a identifier name is valid */
 /* Returns 0 if not */

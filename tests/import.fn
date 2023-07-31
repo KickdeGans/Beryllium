@@ -1,5 +1,5 @@
-println("acpi");
-import "fusion.acpi";
+println("sysapi");
+import "fusion.sysapi";
 println("http");
 import "fusion.http";
 println("math");
@@ -8,5 +8,3 @@ println("stdlib");
 import "fusion.stdlib";
 println("string");
 import "fusion.string";
-println("threading");
-import "fusion.threading";

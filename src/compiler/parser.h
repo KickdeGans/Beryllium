@@ -13,6 +13,7 @@ typedef struct PARSER_STRUCT
     scope_T* scope;
     AST_T* prev_ast;
     int require_semicolon;
+    int has_parsed_root_compound;
 } parser_T;
 
 parser_T* init_parser(lexer_T* lexer);

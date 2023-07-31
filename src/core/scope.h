@@ -27,4 +27,6 @@ AST_T* scope_remove_variable_definition(scope_T* scope, const char* name);
 
 void scope_free(scope_T* scope);
 
+void append_scope(scope_T* scope_dest, scope_T* scope_src);
+
 #endif

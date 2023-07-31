@@ -1,0 +1,6 @@
+#!/bin/bash
+
+make debug
+echo "Type 'make debug' in GDB to compile code for debugging"
+echo "Type 'run' to run file in testing/file.fn"
+gdb --eval-command=run --args fusion.debug testing/file.fn
