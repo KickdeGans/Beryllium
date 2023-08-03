@@ -4,8 +4,8 @@ check_makedeps()
 {
     echo "Checking makedeps"
 
-    gcc_includes=$(stat /bin/gcc)
-    make_includes=$(stat /bin/make)
+    gcc_includes=$(stat $PREFIX/bin/gcc)
+    make_includes=$(stat $PREFIX/bin/make)
 
     if [ "$gcc_includes" == 1 ]; then
         echo "gcc not found, cannot build Fusion"
