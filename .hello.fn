@@ -1,8 +1,0 @@
-string text = "Hello world!";
-
-if (text)
-{
-    println("Hello world!");
-}
-
-exit(0);
