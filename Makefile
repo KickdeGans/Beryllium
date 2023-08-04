@@ -23,4 +23,4 @@ install:
 	cp $(packager_name) $(packager_install_location)
 
 debug:
-	gcc -Wall -g3 -Werror -O3 -lm $(core_files) -o fusion.debug
+	gcc -Wall -g3 -Werror -O3 -lm $(core_files) -o fusion
