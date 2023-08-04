@@ -35,12 +35,6 @@ make install
 make clang
 make install
 ```
-#### For debugging using gdb (GCC only):
-```shell
-./configure
-make debug
-make install
-```
 
 ### Debugging:
 Change directory to the debug folder.
