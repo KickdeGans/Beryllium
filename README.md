@@ -43,7 +43,8 @@ make install
 ```
 
 ### Debugging:
-Run ```./debug``` to debug Fusion.
+Change directory to the debug folder.
+Then, make and then run ```./debug``` to debug Fusion.
 Make sure the script has permissions to be executed
 #### Requirements:
 ```
