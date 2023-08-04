@@ -1,9 +1,0 @@
-fun println(__txt__)
-{
-    var stdout = open("/dev/stdout", "w");
-
-    if (typeof(__txt__) == string)
-    {
-        stdout.write();
-    }
-}
