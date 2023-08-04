@@ -5,16 +5,23 @@ check_makedeps()
     echo "Checking makedeps"
 
     gcc_includes=$(stat $PREFIX/bin/gcc)
+    clang_includes=$(stat $PREFIX/bin/clang)
     make_includes=$(stat $PREFIX/bin/make)
 
     if [ "$gcc_includes" == 1 ]; then
-        echo "gcc not found, cannot build Fusion"
-        echo "Install gcc to install"
-        
-        exit 1
-    fi
 
-    echo "gcc is installed"
+        if [ "$clang_includes" == 1 ]; then
+
+            echo "clang not found, cannot build Fusion"
+            echo "Install clang to install"
+        
+            exit 1
+        else
+            echo "clang is installed. Build with clang using 'make clang'"
+        fi
+    else
+        echo "gcc is installed. Build with gcc using 'make'"
+    fi
 
     if [ "$make_includes" == 1 ]; then
         echo "make not found, cannot build Fusion"
@@ -27,5 +34,3 @@ check_makedeps()
 }
 
 check_makedeps
-
-cp .hello.fn ~/.hello.fn
