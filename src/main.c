@@ -39,28 +39,10 @@ int main(int argc, char* argv[])
 
     for (int i = 1; i < argc; i++)
     {
-        if (fast_compare(argv[i], "--version") == 0)
-        {
-            __version = 1;
-        }
-        else if (fast_compare(argv[i], "--compile") == 0)
-        {
-            __compile = 1;
-            i++;
-            compile_file = argv[i];
-            break;
-        }
-        else if (fast_compare(argv[i], "--run") == 0)
-        {
-            __run = 1;
-            i++;
-            compile_file = argv[i];
-            break;
-        }
-        else if (fast_compare(argv[i], "--help") == 0)
-        {
-            __help = 1;
-        }
+        FCARG("--version",__version) __version = 1; 
+        FCARG("--compile",__compile) FCARG_ACTION(__compile);
+        FCARG("--run",__run)  FCARG_ACTION(__run);
+        FCARG("--help",__help) __help = 1;
     }
     if (__version)
     {
