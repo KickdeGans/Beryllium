@@ -1,3 +1,4 @@
+<img src="Beryllium-Logo.svg" width="256"></img>
 # beryllium
 ## Version 0.45
 
@@ -26,13 +27,11 @@ git clone https://www.github.com/KickdeGans/beryllium.git
 ```
 #### Build and install using GCC:
 ```shell
-./configure
 make
 make install
 ```
 #### Build and install using clang:
 ```shell
-./configure
 make clang
 make install
 ```
