@@ -1,0 +1,72 @@
+global val pi = 3.14159265358;
+
+fun octets_to_srgb(red, green, blue) 
+{
+    return blue + green + (green * 255) + (red * 65536);
+}
+fun is_even(x) 
+{
+    return (x % 2) == 0;
+}
+fun is_odd(x)
+{
+    return (x % 2) != 0;
+}
+fun abs(x)
+{
+    if (x >= 0)
+    {
+        return x; 
+    }
+    else 
+    {
+        return x - (x * 2);
+    }
+}
+fun invert(x)
+{
+    return x - (x * 2);
+}
+#fun factorial(x)
+#{
+#    var sum = 1;
+#    foreach (i->x)
+#    {
+#        sum = sum * i;
+#    }
+#    return sum;
+#}
+fun power(x, y)
+{
+    var sum = 1;
+    foreach (i -> y)
+    {
+        sum = sum * x;
+    }
+    return sum;
+}
+fun randrange(lower, upper)
+{
+    var r = rand() + upper - lower;
+    var x = upper - lower;
+
+    x = x + 1;
+    r = r % x;
+    r = r + lower;
+
+    while (r < lower)
+    {
+        r = rand() + upper - lower;
+        x = upper - lower;
+        
+        x = x + 1;
+        r = r % x;
+        r = r + lower;
+    }
+
+    return r;
+}
+fun sin(x)
+{
+    return x / 90 * 1.564;
+}

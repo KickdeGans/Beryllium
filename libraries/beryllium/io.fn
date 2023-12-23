@@ -1,0 +1,34 @@
+global var stdout = open("/dev/stdout", "w");
+global var stderr = open("/dev/stderr", "w");
+global val stdin = open("/dev/stdin", "rb");
+
+fun print(str)
+{
+    stdout.write(str);
+}
+fun active_tty()
+{
+    system("tty > /tmp/tty");
+    var tty_ = open("/tmp/tty", "rb");
+    var output = tty_.read();
+    close(tty_);
+    return output;
+}
+fun list_tty()
+{
+    system("ls /dev | grep tty > /tmp/lstty");
+    var tty_ = open("/tmp/lstty", "rb");
+    var output = tty_.read();
+    close(tty_);
+    return output.split("\n");
+}
+global val tty = active_tty();
+fun create_file(name)
+{
+    var x = open(name, x);
+    close(x);
+}
+fun delete_file(name)
+{
+    return system("rm ".concat(name));
+}

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-gdb --args beryllium --debug-mode file.be
+gdb --args beryllium.debug --debug-mode file.be

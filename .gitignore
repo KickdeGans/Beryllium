@@ -1,6 +1,5 @@
 # Built Binaries
-fusion
-fusion.debug
+beryllium.debug
 **/*.o
 
 # Prerequisites

@@ -1,0 +1,47 @@
+proc sizeof(x)
+    int length = 0;
+    
+    foreach (i -> x)
+        length = length + 1;
+    end
+
+    return length;
+end
+
+proc contains(haystack, needle)
+    foreach (cc -> haystack)
+        if (cc == needle)
+            return true;
+        end
+    end
+
+    return false;
+end
+
+proc get_command_output_no_delete(command)
+    system(write(command, " > .command_tmp"));
+
+    return read(open(".command_tmp", fin));
+end
+
+proc get_command_output(command)
+    string s = get_command_output_no_delete(command);
+
+    remove(".command_tmp");
+
+    return s;
+end
+
+proc starts_with(src, key)
+    if (sizeof(key) > sizeof(src))
+        return 0;
+    end
+
+    for (int i = 0; i < sizeof(key); i = i + 1)
+        if (src[i] != key[i])
+            return 0;
+        end
+    end
+    
+    return 1;
+end
