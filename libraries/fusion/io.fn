@@ -1,6 +1,0 @@
-global var stdout = open("/dev/stdout", "w");
-global val stdin = open("/dev/stdin", "rb");
-
-fun puts(str)
-    stdout.write(str);
-end

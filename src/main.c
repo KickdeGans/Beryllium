@@ -16,9 +16,9 @@
 
 #define VERSION "0.4"
 
-void print_help()
+void print_help(void)
 {
-    printf("Usage: fusion <options> <file>\n--version:\n    Print version.\n--help:\n    Open help menu.\n");
+    printf("Usage: beryllium <options> <file>\n--version:\n    Print version.\n--help:\n    Open help menu.\n");
     return;
 }
 
@@ -27,15 +27,17 @@ int main(int argc, char* argv[])
 {
     if (argc == 1)
     {
-        printf("No arguments or file given.\nType 'fusion --help' to open the help menu.\n");
+        printf("No arguments or file given.\nType 'beryllium --help' to open the help menu.\n");
         exit(0);
     }
     
-    int   __version       = 0;
-    int   __compile       = 0;
-    int   __run           = 0;
-    int   __help          = 0;
-    char* compile_file    = 0;
+    int   __version         = 0;
+    int   __compile         = 0;
+    int   __run             = 0;
+    int   __help            = 0;
+    int   __debug_mode      = 0;
+    int   file_location_pos = 1;
+    char* compile_file      = 0;
 
     for (int i = 1; i < argc; i++)
     {
@@ -43,37 +45,38 @@ int main(int argc, char* argv[])
         FCARG("--compile",__compile) FCARG_ACTION(__compile);
         FCARG("--run",__run)  FCARG_ACTION(__run);
         FCARG("--help",__help) __help = 1;
+        FCARG("--debug-mode",__debug_mode) __debug_mode = 1;
     }
     if (__version)
     {
         #if defined(__clang__)
             #if defined(__gnu_linux__)
-                printf("Fusion runtime %s [clang] on Linux\n", VERSION);
+                printf("beryllium runtime %s [clang] on Linux\n", VERSION);
                 goto endver;
             #endif
             #if defined(__unix)
-                printf("Fusion runtime %s [clang] on Unix\n", VERSION);
+                printf("beryllium runtime %s [clang] on Unix\n", VERSION);
                 goto endver;
             #endif
             #if defined(_WIN32)
-                printf("Fusion runtime %s [clang] on Windows\n", VERSION);
+                printf("beryllium runtime %s [clang] on Windows\n", VERSION);
                 goto endver;
             #endif
         #elif defined(__GNUC__) || defined(__GNUG__)
             #if defined(__linux)
-                printf("Fusion runtime %s [gcc] on Linux\n", VERSION);
+                printf("beryllium runtime %s [gcc] on Linux\n", VERSION);
                 goto endver;
             #endif
             #if defined(__unix)
-                printf("Fusion runtime %s [gcc] on Unix\n", VERSION);
+                printf("beryllium runtime %s [gcc] on Unix\n", VERSION);
                 goto endver;
             #endif
             #if defined(_WIN32)
-                printf("Fusion runtime %s [gcc] on Windows\n", VERSION);
+                printf("beryllium runtime %s [gcc] on Windows\n", VERSION);
                 goto endver;
             #endif
         #elif defined(_MSC_VER)
-        printf("Fusion runtime %s [Microsoft C] on Windows\n", VERSION);
+        printf("beryllium runtime %s [Microsoft C] on Windows\n", VERSION);
         #endif
     }
     endver:
@@ -118,7 +121,10 @@ int main(int argc, char* argv[])
 
     char* path = calloc(1, sizeof(char*));
 
-    for (int i = 1; i < argc; i++)
+    if (__debug_mode)
+        file_location_pos = 2;
+
+    for (int i = file_location_pos; i < argc; i++)
     {
         int len = strlen(argv[i]);
         char* last_four = &argv[i][len-3];
@@ -128,14 +134,17 @@ int main(int argc, char* argv[])
         strcat(path, argv[i]);
         strcat(path, " ");
 
-        if (fast_compare(last_four,".fn") == 0 || i + 1 == argc)
+        if (fast_compare(last_four,".be") == 0 || i + 1 == argc)
         {
+            if (__debug_mode)
+                printf("###### RUNNING IN DEBUG MODE ######\n\n");
+
             path[strlen(path)-1] = '\0';
 
             if (i == argc)
-                run_file(path, argv);
+                run_file(path, argv, __debug_mode);
             else
-                run_file(path, calloc(1, sizeof(char*)));
+                run_file(path, calloc(1, sizeof(char*)), __debug_mode);
         }
     }
 

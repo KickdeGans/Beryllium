@@ -14,6 +14,8 @@ typedef struct PARSER_STRUCT
     AST_T* prev_ast;
     int require_semicolon;
     int has_parsed_root_compound;
+    int is_single_expression;
+    char* in_field;
 } parser_T;
 
 parser_T* init_parser(lexer_T* lexer);

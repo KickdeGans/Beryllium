@@ -2,10 +2,10 @@
 #include "visitor.h"
 #include "../core/AST.h"
 #include "../lib/io.h"
-#include "../lib/http.h"
 #include "../lib/string.h"
 #include "array.h"
 #include "typename.h"
+#include "import.h"
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -40,21 +40,7 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         }
         return init_ast(AST_NOOP);
     }
-    if (fast_compare(node->function_call_name, "putstrln") == 0)
-    {
-        if (args_size != 1)
-        {
-            printf("\n\033[0;31mruntime error:\033[0m\n    function 'putstrln()' takes 1 argument\n");
-            exit(1);
-        }
-
-        AST_T* visited_ast = visitor_visit(visitor, args[0]);
-
-        puts(visited_ast->string_value);
-
-        return init_ast(AST_NOOP);
-    }
-
+    
     if (fast_compare(node->function_call_name, "exit") == 0)
     {
         if (args_size != 1)
@@ -83,30 +69,11 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
     if (fast_compare(node->function_call_name, "input") == 0)
     {
         AST_T* ast = init_ast(AST_STRING);
-        for (size_t i = 0; i < args_size; i++)
-        {
-            AST_T* visited_ast = visitor_visit(visitor, args[i]);
-            switch (visited_ast->type)
-            {
-                case AST_STRING: printf("%s", visited_ast->string_value); break;
-                case AST_INT: printf("%i", visited_ast->ast_int); break;
-                case AST_DOUBLE: printf("%f", visited_ast->ast_double); break;
-                case AST_BOOLEAN:
-                    switch (visited_ast->boolean_value)
-                    {
-                        case 1: printf("true"); break;
-                        case 0: printf("false"); break;
-                    }
-                    break;
-                default: break;
-            }
-        }
-        char value[16384];
+
+        char value[2048];
         fgets(value, sizeof(value), stdin);
-        ast->string_value = malloc(sizeof(value));
-        strcpy(ast->string_value, value);
-        ast->string_value[strlen(ast->string_value)] = '\0';
-        ast->string_value[strlen(ast->string_value) - 1] = '\0';
+
+        ast->string_value = value;
         return ast;
     }
     if (fast_compare(node->function_call_name, "sleep") == 0)
@@ -120,13 +87,6 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         usleep(visited_ast->ast_double * 1000);
         usleep(visited_ast->ast_int * 1000);
         return visited_ast;
-    }
-    if (fast_compare(node->function_call_name, "http") == 0)
-    {
-        AST_T* header = visitor_visit(visitor, args[0]);
-        AST_T* ast = init_ast(AST_STRING);
-        ast->string_value = http_request(header->string_value, NULL, 0);
-        return ast;
     }
     if (fast_compare(node->function_call_name, "typeof") == 0)
     {
@@ -274,6 +234,15 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         ast->ast_int = rand();
         
         return ast;
+    }
+    if (fast_compare(node->function_call_name, "local_import") == 0)
+    {
+        char* file = visitor_visit(visitor, args[0])->string_value;
+        char path[255] = "/etc/beryllium-lib/";
+        strcat(path, replace_char(file, '.', '/'));
+        strcat(path, ".fn");
+        import(visitor, node->private_scope, path);
+        return init_ast(AST_NOOP);
     }
 
     return (void*) 0;

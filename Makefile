@@ -1,7 +1,7 @@
 core_files = src/*.c src/lib/*.c src/core/*.c src/runtime/*.c src/compiler/*.c
-core_name = fusion
-core_install_location = /bin/fusion
-core_libraries_folder = /etc/fusion-lib
+core_name = beryllium
+core_install_location = /bin/beryllium
+core_libraries_folder = /etc/beryllium-lib
 core_libraries_name = libraries
 
 make:

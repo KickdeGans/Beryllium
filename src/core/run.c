@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void set_rand()
+void set_rand(void)
 {
     struct timeval time;
 
@@ -19,7 +19,7 @@ void set_rand()
     return;
 }
 
-void run_file(char* path, char** args)
+void run_file(char* path, char** args, int debug_mode)
 {
     char* file_contents = io_file_read(path);
 
@@ -28,6 +28,8 @@ void run_file(char* path, char** args)
     AST_T* root = parser_parse(parser, parser->scope);
     visitor_T* visitor = init_visitor();
     visitor->args = args;
+    visitor->requires_main_method = 1;
+    visitor->debug_mode = debug_mode;
 
     free(lexer);
     free(parser);

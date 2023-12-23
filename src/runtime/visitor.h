@@ -7,10 +7,12 @@ typedef struct VISITOR_STRUCT
 {
     struct SCOPE_STRUCT* scope;
     int prev_statement_value;
+    int requires_main_method;
+    int debug_mode;
     char** args;
 } visitor_T;
 
-visitor_T* init_visitor();
+visitor_T* init_visitor(void);
 
 AST_T* visitor_visit(visitor_T* visitor, AST_T* node);
 

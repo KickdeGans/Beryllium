@@ -1,6 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+void print_help(void);
+
 #define FCARG(sw,flag) \
 	if(fast_compare(argv[i],sw)==0)
 
@@ -11,5 +13,4 @@
             compile_file = argv[i]; \
             break; \
         }
-
 #endif

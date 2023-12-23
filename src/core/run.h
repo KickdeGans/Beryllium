@@ -7,7 +7,7 @@
 #include "../compiler/lexer.h"
 #include "../lib/io.h"
 
-void set_rand();
-void run_file(char* path, char** args);
+void set_rand(void);
+void run_file(char* path, char** args, int debug_mode);
 
 #endif

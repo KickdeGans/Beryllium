@@ -11,7 +11,7 @@ typedef struct SCOPE_STRUCT
     size_t variable_definitions_size;
 } scope_T;
 
-scope_T* init_scope();
+scope_T* init_scope(void);
 
 AST_T* scope_add_function_definition(scope_T* scope, AST_T* fdef);
 

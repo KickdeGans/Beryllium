@@ -166,14 +166,14 @@ token_T* lexer_collect_string(lexer_T* lexer)
             lexer_advance(lexer);
             switch (lexer->c)
             {
-                case 'b': s = "\b"; break;
-                case 'f': s = "\f"; break;
-                case 'n': s = "\n"; break;
-                case 'r': s = "\r"; break;
-                case '"': s = "\""; break;
-                case 'a': s = "\a"; break;
-                case 't': s = "\t"; break;
-                case 'v': s = "\v"; break;
+                case 'b': s[0] = '\b'; break;
+                case 'f': s[0] = '\f'; break;
+                case 'n': s[0] = '\n'; break;
+                case 'r': s[0] = '\r'; break;
+                case '"': s[0] = '\"'; break;
+                case 'a': s[0] = '\a'; break;
+                case 't': s[0] = '\t'; break;
+                case 'v': s[0] = '\v'; break;
                 case '0': 
                     lexer_advance(lexer);
                     if (lexer->c == '3')
@@ -181,7 +181,7 @@ token_T* lexer_collect_string(lexer_T* lexer)
                         lexer_advance(lexer);
                         if (lexer->c == '3')
                         {
-                            s = "\033";
+                            s[0] = '\033';
                             break;
                         }
                     }
@@ -192,8 +192,8 @@ token_T* lexer_collect_string(lexer_T* lexer)
                         lexer->c = lexer->contents[lexer->i];
                     }
 
-                    s = "\0"; break;
-                case '\\': s = "\\"; break;
+                    s[0] = '\0'; break;
+                case '\\': s[0] = '\\'; break;
             }
         }
 

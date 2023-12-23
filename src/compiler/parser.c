@@ -5,6 +5,7 @@
 #include "../lib/string.h"
 #include "identifier.h"
 #include "token.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -17,35 +18,63 @@ parser_T* init_parser(lexer_T* lexer)
     parser->scope = init_scope();
     parser->require_semicolon = 1;
     parser->has_parsed_root_compound = 0;
+    parser->is_single_expression = 0;
+    parser->in_field = (void*)0;
 
     return parser;
 }
 
 /* Get next token with type */
-/* If desired token is not the next token the program exists with an error */
+/* If desired token is not the next token the program exits with an error */
 void parser_eat(parser_T* parser, int token_type)
 {
     if (parser->current_token->type == token_type)
     {
         parser->prev_token = parser->current_token;
         parser->current_token = lexer_get_next_token(parser->lexer);
+        //printf("[ '%s': '%s' ] ", token_get_token_name_from_type(parser->current_token->type), parser->current_token->value);
     }
     else
     {
-        printf("\ncompilation error:\n    unexpected token '%s' at line %d. expected '%s':\n         ", parser->current_token->value, parser->lexer->current_line, token_get_token_name_from_type(token_type));
-        printf("%s%s%s\n         ", parser->prev_token->value, parser->current_token->value, lexer_get_next_token(parser->lexer)->value);
+        printf("\ncompilation error in %s:\n    unexpected token '%s' at line %d. expected '%s':\n         ", parser->in_field, parser->current_token->value, parser->lexer->current_line, token_get_token_name_from_type(token_type));
+        
+        int has_quote = 0;
+        if (parser->prev_token->type == TOKEN_STRING)
+        {
+            printf("\"%s\"", parser->prev_token->value);
+            has_quote = 1;
+        }
+        else 
+            printf("%s", parser->prev_token->value);
+        if (parser->current_token->type == TOKEN_STRING)
+        {
+            printf("\"%s\"", parser->current_token->value);
+            has_quote = 1;
+        }
+        else 
+            printf("%s", parser->current_token->value);
+        if (lexer_get_next_token(parser->lexer)->type == TOKEN_STRING)
+        {
+            printf("\"%s\"\n", lexer_get_next_token(parser->lexer)->value);
+            has_quote = 1;
+        }
+        else 
+            printf("%s\n", lexer_get_next_token(parser->lexer)->value);
 
-        for (int i = 0; i < strlen(parser->prev_token->value); i++)
+        if (has_quote)
+            printf("           ");
+        else
+            printf("         ");
+
+        for (size_t i = 0; i < strlen(parser->prev_token->value); i++)
         {
             printf(" ");
         }
 
-        printf("^");
-
-        for (int i = 0; i < strlen(parser->current_token->value) - 1; i++)
+        for (size_t i = 0; i < strlen(parser->current_token->value); i++)
         {
             printf("~");
-        }
+        }  
 
         printf("\n");
         exit(1);
@@ -55,12 +84,16 @@ void parser_eat(parser_T* parser, int token_type)
 /* Create Abstract Syntax Tree */
 AST_T* parser_parse(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_root";
+
     return parser_parse_statements(parser, scope);
 }
 
 /* Parse a statement */
 AST_T* parser_parse_statement(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_statement";
+
     if (parser->current_token->type == TOKEN_ID)
         return parser_parse_id(parser, scope);
     if (parser->current_token->type == TOKEN_DOT)
@@ -73,6 +106,8 @@ AST_T* parser_parse_statement(parser_T* parser, scope_T* scope)
 /* Usually within braces */
 AST_T* parser_parse_statements(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_statements";
+
     AST_T* compound = init_ast(AST_COMPOUND);
     compound->scope = scope;
     compound->compound_value = calloc(1, sizeof(struct AST_STRUCT*));
@@ -85,9 +120,7 @@ AST_T* parser_parse_statements(parser_T* parser, scope_T* scope)
     AST_T* ast_statement = parser_parse_statement(parser, scope);
 
     if (ast_statement->type == AST_NOOP)
-    {
         return init_ast(AST_NOOP);
-    }
 
     ast_statement->scope = scope;
     compound->compound_value[0] = ast_statement;
@@ -122,7 +155,9 @@ AST_T* parser_parse_statements(parser_T* parser, scope_T* scope)
 /* Parse an expression */
 AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
 {
-    do 
+    parser->in_field = "parse_expr";
+
+    while (1)
     {
         switch (parser->current_token->type)
         {
@@ -147,25 +182,33 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
             case TOKEN_DOT: parser->prev_ast = parser_parse_attribute(parser, scope); break;
             default: break;
         }
-     } while (!(parser->current_token->type == TOKEN_RBRACKET ||
-               parser->current_token->type == TOKEN_RPAREN ||
+
+        if (parser->is_single_expression == 1 || parser->current_token->type == TOKEN_RPAREN ||
                parser->current_token->type == TOKEN_RBRACE ||
                parser->current_token->type == TOKEN_COMMA ||
-               parser->current_token->type == TOKEN_SEMI));
+               parser->current_token->type == TOKEN_SEMI)
+            break;
+     }
+
+    parser->is_single_expression = 0;
 
     return parser->prev_ast;
 }
 
 AST_T* parser_parse_attribute(parser_T* parser, scope_T* scope)
 {
-    AST_T* ast = init_ast(AST_ATTRIBUTE);
-
-    ast->attribute_source = parser->prev_ast;
+    parser->in_field = "parse_attribute";
 
     parser_eat(parser, TOKEN_DOT);
 
+    AST_T* ast = init_ast(AST_ATTRIBUTE);
+
+    ast->attribute_source = malloc(sizeof(&parser->prev_ast));
+    memcpy(ast->attribute_source, parser->prev_ast, sizeof(&parser->prev_ast));
+
     ast->attribute_modifier = parser_parse_expr(parser, scope);
-    ast->scope = scope;
+
+    printf("%s\n", parser->current_token->value);
 
     return ast;
 }
@@ -173,6 +216,8 @@ AST_T* parser_parse_attribute(parser_T* parser, scope_T* scope)
 /* Parse an expression within parenthesis */
 AST_T* parser_parse_paren_expr(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_paren_expresion";
+
     parser_eat(parser, TOKEN_LPAREN);
 
     AST_T* ast = parser_parse_expr(parser, scope);
@@ -186,6 +231,8 @@ AST_T* parser_parse_paren_expr(parser_T* parser, scope_T* scope)
 /* Evaluated at runtime, not compile time */
 AST_T* parser_parse_math_expr(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_math_expresion";
+
     AST_T* math_expr = init_ast(AST_MATH_EXPR);
 
     math_expr->math_expression = calloc(1, sizeof(struct AST_STRUCT*));
@@ -229,6 +276,8 @@ AST_T* parser_parse_math_expr(parser_T* parser, scope_T* scope)
 /* Parse a function call */
 AST_T* parser_parse_function_call(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_function_call";
+
     AST_T* function_call = init_ast(AST_FUNCTION_CALL);
 
     function_call->function_call_name = parser->prev_token->value;
@@ -260,6 +309,8 @@ AST_T* parser_parse_function_call(parser_T* parser, scope_T* scope)
 /* return value; */
 AST_T* parser_parse_statement_call(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_statement_call";
+
     AST_T* statement_call = init_ast(AST_STATEMENT_CALL);
 
     statement_call->statement_call_type = parser->current_token->value;
@@ -280,6 +331,8 @@ AST_T* parser_parse_statement_call(parser_T* parser, scope_T* scope)
 /* Parse a variable definition */
 AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_variable_definition";
+
     int is_public = 0;
     int is_const = 0;
     if (fast_compare(parser->current_token->value, "global") == 0)
@@ -328,11 +381,14 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
 /* Example: */
 /* 
 fn hello() 
+{
     println("Hello world!");
-end
+}
 */
 AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_function_definition";
+
     AST_T* ast = init_ast(AST_FUNCTION_DEFINITION);
     parser_eat(parser, TOKEN_ID);
     ast->function_definition_name = parser->current_token->value;
@@ -377,7 +433,6 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
 
     parser_eat(parser, TOKEN_RBRACE);
     
-    ast->scope = scope;
     return ast;
 }
 
@@ -385,11 +440,14 @@ AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
 /* Example: */
 /*
 if (condition)
+{
     doSomething();
-end
+}
 */
 AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_statement_definition";
+
     AST_T* ast = init_ast(AST_STATEMENT_DEFINITION);
     char* type = parser->current_token->value;
     ast->statement_definition_type = calloc(
@@ -452,6 +510,8 @@ AST_T* parser_parse_statement_definition(parser_T* parser, scope_T* scope)
 /* Parse a variable (identifier) */
 AST_T* parser_parse_variable(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_variable";
+
     char* token_value = parser->current_token->value;
     parser->prev_token = parser->current_token;
     parser_eat(parser, TOKEN_ID);
@@ -574,6 +634,9 @@ AST_T* parser_parse_variable(parser_T* parser, scope_T* scope)
 /* Parse a string */
 AST_T* parser_parse_string(parser_T* parser, scope_T* scope)
 {
+    //parser->is_single_expression = 1;
+    parser->in_field = "parse_string";
+
     AST_T* ast_string = init_ast(AST_STRING);
 
     ast_string->string_value = parser->current_token->value;
@@ -581,13 +644,14 @@ AST_T* parser_parse_string(parser_T* parser, scope_T* scope)
     parser_eat(parser, TOKEN_STRING);
 
     ast_string->scope = scope;
-
     return ast_string;
 }
 
 /* Parse an array */
 AST_T* parser_parse_array(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_array";
+
     parser_eat(parser, TOKEN_LBRACE);
     AST_T* ast_array = init_ast(AST_ARRAY);
     ast_array->array_value = calloc(1, sizeof(struct AST_STRUCT*));
@@ -612,6 +676,8 @@ AST_T* parser_parse_array(parser_T* parser, scope_T* scope)
 /* Example: array[1] */
 AST_T* parser_parse_array_get_by_index(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_array_get_by_index";
+
     AST_T* ast = init_ast(AST_GET_ARRAY_ITEM_BY_INDEX);
 
     ast->array_item = parser->prev_ast;
@@ -631,6 +697,8 @@ AST_T* parser_parse_array_get_by_index(parser_T* parser, scope_T* scope)
 /* Evaluated at runtime not compile time */
 AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_boolean";
+
     AST_T* ast_boolean = init_ast(AST_BOOLEAN);
     ast_boolean->boolean_variable_a = init_ast(AST_STRING);
     ast_boolean->boolean_variable_b = init_ast(AST_STRING);
@@ -657,6 +725,8 @@ AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope)
 /* Parse a number and determine its type by detecting decimals */
 AST_T* parser_parse_number(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_number";
+
     if (((int)strtod(parser->current_token->value, NULL)) == strtod(parser->current_token->value, NULL))
     {
         AST_T* ast_number = init_ast(AST_INT);
@@ -680,12 +750,15 @@ AST_T* parser_parse_number(parser_T* parser, scope_T* scope)
 /* Parse a for loop expression */
 AST_T* parser_parse_forloop(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_forloop";
+
     AST_T* ast_forloop = init_ast(AST_FORLOOP);
 
     ast_forloop->forloop_variable_definition = parser_parse_statement(parser, scope);
 
     parser_eat(parser, TOKEN_SEMI);
 
+    parser->is_single_expression = 1;
     ast_forloop->forloop_condition = parser_parse_expr(parser, scope);
 
     parser_eat(parser, TOKEN_SEMI);
@@ -700,6 +773,8 @@ AST_T* parser_parse_forloop(parser_T* parser, scope_T* scope)
 
 AST_T* parser_parse_foreach(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_foreach";
+
     AST_T* ast_foreach = init_ast(AST_FOREACH);
 
     ast_foreach->foreach_variable_name = parser->current_token->value;
@@ -719,6 +794,8 @@ AST_T* parser_parse_foreach(parser_T* parser, scope_T* scope)
 /* Example: foo = bar; */
 AST_T* parser_parse_variable_setter(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_variable_setter";
+
     AST_T* ast_varset = init_ast(AST_VARIABLE_SETTER);
 
     char* variable_setter_variable_name = parser->prev_token->value;
@@ -736,6 +813,8 @@ AST_T* parser_parse_variable_setter(parser_T* parser, scope_T* scope)
 /* Example: "username": "user" */
 AST_T* parser_parse_dict_item(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_dict_item";
+
     parser_eat(parser, TOKEN_COLON);
     AST_T* dict_item = init_ast(AST_DICT_ITEM);
     
@@ -755,6 +834,8 @@ AST_T* parser_parse_dict_item(parser_T* parser, scope_T* scope)
 /* Parse an identifier */
 AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
 {
+    parser->in_field = "parse_id";
+
     if (fast_compare(parser->current_token->value, "var") == 0 ||
         fast_compare(parser->current_token->value, "val") == 0 ||
         fast_compare(parser->current_token->value, "global") == 0)

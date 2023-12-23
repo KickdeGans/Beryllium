@@ -1,11 +1,12 @@
 #include "AST.h"
 #include "../lib/string.h"
 #include "scope.h"
+#include <stddef.h>
 #include <string.h>
 #include <stdio.h>
 
 /* Initiate the scope */
-scope_T* init_scope()
+scope_T* init_scope(void)
 {
     scope_T* scope = calloc(1, sizeof(struct SCOPE_STRUCT));
 
@@ -20,7 +21,10 @@ scope_T* init_scope()
 
 /* Add a function definition */
 AST_T* scope_add_function_definition(scope_T* scope, AST_T* fdef)
-{
+{   
+    if (!scope)
+        scope = init_scope();
+
     scope->function_definitions_size += 1;
 
     if (scope->function_definitions == (void*)0)
@@ -47,7 +51,7 @@ AST_T* scope_get_function_definition(scope_T* scope, const char* fname)
     if (scope == (void*) 0)
         return (void*) 0;
 
-    for (int i = 0; i < scope->function_definitions_size; i++)
+    for (size_t i = 0; i < scope->function_definitions_size; i++)
     {
         AST_T* fdef = scope->function_definitions[i];
 
@@ -90,7 +94,7 @@ AST_T* scope_get_variable_definition(scope_T* scope, const char* name)
     if (name == (void*) 0)
         return (void*) 0;
 
-    for (int i = 0; i < scope->variable_definitions_size; i++)
+    for (size_t i = 0; i < scope->variable_definitions_size; i++)
     {
         AST_T* vdef = scope->variable_definitions[i];
 
@@ -114,7 +118,7 @@ AST_T* scope_set_variable_definition(scope_T* scope, AST_T* vdef, const char* na
     if (name == (void*) 0)
         return (void*) 0;
 
-    for (int i = 0; i < scope->variable_definitions_size; i++)
+    for (size_t i = 0; i < scope->variable_definitions_size; i++)
     {
         AST_T* vdef_ = scope->variable_definitions[i];
         
@@ -142,7 +146,7 @@ AST_T* scope_remove_variable_definition(scope_T* scope, const char* name)
     if (scope == (void*) 0)
         return (void*) 0;
 
-    for (int i = 0; i < scope->variable_definitions_size; i++)
+    for (size_t i = 0; i < scope->variable_definitions_size; i++)
     {
         AST_T* vdef_ = scope->variable_definitions[i];
         
@@ -166,10 +170,10 @@ void scope_free(scope_T* scope)
 
 void append_scope(scope_T* scope_dest, scope_T* scope_src)
 {
-    if (scope_dest == (void*) 0)
+    if (!scope_dest)
         scope_dest = init_scope();
 
-    if (scope_src == (void*) 0)
+    if (!scope_src)
         scope_src = init_scope();
 
     const size_t size = scope_src->variable_definitions_size;

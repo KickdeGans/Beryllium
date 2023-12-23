@@ -4,7 +4,7 @@
 
 char* replace_char(char* str, char find, char replace)
 {
-    char *current_pos = strchr(str,find);
+    char* current_pos = strchr(str,find);
     while (current_pos) 
     {
         *current_pos = replace;
@@ -12,19 +12,19 @@ char* replace_char(char* str, char find, char replace)
     }
     return str;
 }
-int contains_char(char* str, char find)
+int contains_char(const char* str, const char find)
 {
-    for (int i = 0; i < strlen(str); i++)
-    {
-        if (str[i] == find)
+    while (*str) 
+        if (*str++ == find)
             return 1;
-    }
     return 0;
 }
+
+//faster implementation of strcmp to only check if two strings match
 int fast_compare(const char *str, const char *cmp)
 {
     while (*str) 
         if (*str++ != *cmp++)
             return 1;
-    return 0;
+    return *cmp != 0;
 }

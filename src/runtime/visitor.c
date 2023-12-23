@@ -7,11 +7,12 @@
 #include "../compiler/lexer.h"
 #include "../compiler/parser.h"
 #include "import.h"
-#include "../lib/http.h"
 #include "builtin.h"
 #include "typename.h"
 #include "../lib/string.h"
+#include "../lib/debug.h"
 #include "array.h"
+#include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -20,7 +21,7 @@
 #include <ctype.h>
 
 /* Initiate visitor */
-visitor_T* init_visitor()
+visitor_T* init_visitor(void)
 {
     visitor_T* visitor = calloc(1, sizeof(struct VISITOR_STRUCT));
 
@@ -79,16 +80,19 @@ AST_T* visitor_visit(visitor_T* visitor, AST_T* node)
     }
     
     printf("\n\033[0;31mruntime error:\033[0m\n    uncaught statement of type %d\n", node->type);
-    exit(1);
+    error_exit(visitor, node);
 
     return init_ast(AST_NOOP);
 }
 
 AST_T* visitor_visit_attribute(visitor_T* visitor, AST_T* node)
 {
+    if (!node->attribute_source)
+        return init_ast(AST_NOOP);
+
     append_scope(node->attribute_source->scope, node->scope);
     append_scope(node->attribute_source->scope, node->private_scope);
-
+ 
     AST_T* value = visitor_visit(visitor, node->attribute_source);
     
     if (node->attribute_modifier->type == AST_FUNCTION_CALL)
@@ -123,12 +127,18 @@ AST_T* visitor_visit_attribute(visitor_T* visitor, AST_T* node)
                 length = ftell(value->stream);
                 fseek(value->stream, 0, SEEK_SET);
 
-                buffer = calloc(length, length);
+                buffer = calloc(length + 1, length);
 
                 if (buffer)
+                {
                     fread(buffer, 1, length, value->stream);
-
-                string->string_value = buffer;
+                    string->string_value = buffer;
+                }
+            }
+            else
+            {
+                printf("\n\033[0;31mruntime error:\033[0m\n    streamError: cannot read stream that is not of type 'stream'.\n");
+                error_exit(visitor, value);
             }
 
             return string;
@@ -138,11 +148,15 @@ AST_T* visitor_visit_attribute(visitor_T* visitor, AST_T* node)
             if (args_size != 1)
             {
                 printf("\n\033[0;31mruntime error:\033[0m\n    function 'write()' takes 1 argument\n");
-                exit(1);
+                error_exit(visitor, node);
             }
-
+            if (!value->stream)
+            {
+                printf("\n\033[0;31mruntime error:\033[0m\n    cannot write to null\n");
+                error_exit(visitor, node);
+            }
             AST_T* visited_ast = visitor_visit(visitor, args[0]);
-
+            
             fprintf(value->stream, "%s", visited_ast->string_value);
 
             return init_ast(AST_NOOP);
@@ -152,13 +166,18 @@ AST_T* visitor_visit_attribute(visitor_T* visitor, AST_T* node)
             if (args_size != 1)
             {
                 printf("\n\033[0;31mruntime error:\033[0m\n    function 'concat()' takes 1 argument\n");
-                exit(1);
+                error_exit(visitor, node);
             }
 
             AST_T* visited_ast = visitor_visit(visitor, args[0]);
             AST_T* string = init_ast(AST_STRING);
 
-            string->string_value = malloc(sizeof(visited_ast->string_value) + sizeof(value->string_value) + 1);
+            if (!visited_ast->string_value) 
+                visited_ast->string_value = "";
+            if (!value->string_value)
+                value->string_value = "";
+
+            string->string_value = malloc(strlen(visited_ast->string_value) + strlen(value->string_value));
 
             sprintf(string->string_value, "%s%s", value->string_value, visited_ast->string_value);
 
@@ -240,7 +259,7 @@ AST_T* visitor_visit_attribute(visitor_T* visitor, AST_T* node)
             if (args_size != 1)
             {
                 printf("\n\033[0;31mruntime error:\033[0m\n    function 'append()' takes 1 argument\n");
-                exit(1);
+                error_exit(visitor, node);
             }
 
             AST_T* array = init_ast(AST_ARRAY);
@@ -253,9 +272,69 @@ AST_T* visitor_visit_attribute(visitor_T* visitor, AST_T* node)
 
             return array;
         }
+        if (fast_compare(node->attribute_modifier->function_call_name, "contains") == 0)
+        {
+            if (args_size != 1)
+            {
+                printf("\n\033[0;31mruntime error:\033[0m\n    function 'contains()' takes 1 argument\n");
+                error_exit(visitor, node);
+            }
+
+            AST_T* item = visitor_visit(visitor, args[0]);
+            AST_T* result = init_ast(AST_BOOLEAN);
+
+            if (value->type != AST_STRING || item->type != AST_STRING)
+            {
+                printf("\n\033[0;31mruntime error:\033[0m\n    contains: cannot compare values of two different types.\n");
+                error_exit(visitor, value);
+            }
+
+            result->boolean_value = strstr(value->string_value, item->string_value) != NULL;
+
+            return result;
+        }
+        if (fast_compare(node->attribute_modifier->function_call_name, "split") == 0)
+        {
+            if (args_size != 1)
+            {
+                printf("\n\033[0;31mruntime error:\033[0m\n    function 'split()' takes 1 argument\n");
+                error_exit(visitor, node);
+            }
+
+            AST_T* item = visitor_visit(visitor, args[0]);
+            if (item->type != AST_STRING)
+            {
+                printf("\n\033[0;31mruntime error:\033[0m\n    cannot split with null\n");
+                error_exit(visitor, node);
+            }
+            if (value->type != AST_STRING)
+            {
+                printf("\n\033[0;31mruntime error:\033[0m\n    cannot split null\n");
+                error_exit(visitor, node);
+            }
+
+            char * token = strtok(value->string_value, item->string_value);
+            AST_T* result = init_ast(AST_STRING);
+
+            while (token != NULL) 
+            {
+                AST_T* str = init_ast(AST_STRING);
+
+                str->string_value = malloc(strlen(token));
+
+                strcpy(str->string_value, token);
+                append_array(result->array_value, str, &result->array_size);
+
+                token = strtok(NULL, item->string_value);
+            }
+            
+            return result;
+        }
     }
     if (node->attribute_modifier->type == AST_ATTRIBUTE)
-        return visitor_visit(visitor, node);
+    {
+        return visitor_visit_attribute(visitor, node);
+    }
 
     return init_ast(AST_NOOP);
 }
@@ -268,7 +347,7 @@ AST_T* visitor_visit_variable_definition(visitor_T* visitor, AST_T* node)
     scope_get_variable_definition(node->private_scope, node->variable_definition_variable_name) != (void*) 0)
     {
         printf("\n\033[0;31mruntime error:\033[0m\n    variable '%s' already defined\n", node->variable_definition_variable_name);
-        exit(1);
+        error_exit(visitor, node);
     }
 
     append_scope(node->variable_definition_value->scope, node->scope);
@@ -294,6 +373,7 @@ AST_T* visitor_visit_variable_definition(visitor_T* visitor, AST_T* node)
             visitor->scope,
             node 
         );
+        
         return node;
     }
 
@@ -364,7 +444,7 @@ AST_T* visitor_visit_variable(visitor_T* visitor, AST_T* node)
     }
     */
     printf("\n\033[0;31mruntime error:\033[0m\n    variable '%s' is not defined\n", node->variable_name);
-    exit(1);
+    error_exit(visitor, node);
     
     return init_ast(AST_NOOP);
 }
@@ -377,10 +457,14 @@ AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
     append_scope(node->statement_definition_body->scope, node->private_scope);
     append_scope(node->statement_definition_body->scope, node->scope);
 
-    if (fast_compare(node->statement_definition_type, "else") != 0) 
+    if (fast_compare(node->statement_definition_type, "else") != 0)
     {
         append_scope(node->statement_definition_args->scope, node->statement_definition_body->scope);
         append_scope(node->statement_definition_args->scope, node->statement_definition_body->private_scope);
+        append_scope(node->statement_definition_args->scope, node->private_scope);
+        append_scope(node->statement_definition_args->scope, node->scope);
+        node->statement_definition_args->is_private = 1;
+        node->statement_definition_args->private_scope = node->private_scope;
     }
 
     if (fast_compare(node->statement_definition_type, "if") == 0)
@@ -390,8 +474,7 @@ AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
             visitor->prev_statement_value = 1;
             return visitor_visit(visitor, node->statement_definition_body);
         }
-        else
-            visitor->prev_statement_value = 0;
+        visitor->prev_statement_value = 0;
     }
     if (fast_compare(node->statement_definition_type, "else") == 0)
     {
@@ -400,10 +483,6 @@ AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
     }
     else if (fast_compare(node->statement_definition_type, "while") == 0)
     {
-        if (node->statement_definition_body->compound_size == 0)
-        {
-            return init_ast(AST_NOOP);
-        }
         while (visitor_evaluate_boolean(visitor, visitor_visit(visitor, node->statement_definition_args)))
         {
             AST_T* ast = visitor_visit(visitor, node->statement_definition_body);
@@ -417,66 +496,6 @@ AST_T* visitor_visit_statement_definition(visitor_T* visitor, AST_T* node)
             node->statement_definition_body->private_scope = init_scope();
             ast_free(ast);
         }
-    }
-    else if (fast_compare(node->statement_definition_type, "until") == 0)
-    {
-        if (node->statement_definition_body->compound_size == 0)
-        {
-            return init_ast(AST_NOOP);
-        }
-        while (visitor_evaluate_boolean(visitor, visitor_visit(visitor, node->statement_definition_args)))
-        {
-            AST_T* ast = visitor_visit(visitor, node->statement_definition_body);
-            if (ast->break_)
-                break;
-            if (ast->is_return_value)
-            {
-                ast->is_return_value = 0;
-                return ast;
-            }
-            node->statement_definition_body->private_scope = init_scope();
-            ast_free(ast);
-        }
-    }
-    else if (fast_compare(node->statement_definition_type, "dowhile") == 0)
-    {
-        if (node->statement_definition_body->compound_size == 0)
-        {
-            return init_ast(AST_NOOP);
-        }
-        do 
-        {
-            AST_T* ast = visitor_visit(visitor, node->statement_definition_body);
-            if (ast->break_)
-                break;
-            if (ast->is_return_value)
-            {
-                ast->is_return_value = 0;
-                return ast;
-            }
-            node->statement_definition_body->private_scope = init_scope();
-            ast_free(ast);
-        } while (visitor_evaluate_boolean(visitor, visitor_visit(visitor, node->statement_definition_args)));
-    }
-    else if (fast_compare(node->statement_definition_type, "dountil") == 0)
-    {
-        if (node->statement_definition_body->compound_size == 0)
-        {
-            return init_ast(AST_NOOP);
-        }
-        do 
-        {
-            AST_T* ast = visitor_visit(visitor, node->statement_definition_body);
-            if (ast->break_)
-                break;
-            if (ast->is_return_value)
-            {
-                ast->is_return_value = 0;
-                return ast;
-            }
-            node->statement_definition_body->private_scope = init_scope();
-            ast_free(ast);
-        } while (visitor_evaluate_boolean(visitor, visitor_visit(visitor, node->statement_definition_args)));
     }
     else if (fast_compare(node->statement_definition_type, "for") == 0)
     {
@@ -542,7 +561,7 @@ AST_T* visitor_visit_foreach(visitor_T* visitor, AST_T* node)
     {
         scope_add_variable_definition(node->statement_definition_body->scope, variable_definition);
 
-        for (size_t i = 0; i < (int)value->array_size; i++)
+        for (size_t i = 0; i < value->array_size; i++)
         {
             scope_set_variable_definition(node->statement_definition_body->scope, value->array_value[i], variable_definition->variable_definition_variable_name);
 
@@ -595,7 +614,7 @@ AST_T* visitor_visit_get_array_by_index(visitor_T* visitor, AST_T* node)
 
     if (index->type == AST_STRING)
     {
-        for (int i = 0; i < item->array_size; i++)
+        for (size_t i = 0; i < item->array_size; i++)
         {
             if (fast_compare(item->array_value[i]->dict_key, index->string_value) == 0)
             {
@@ -603,9 +622,9 @@ AST_T* visitor_visit_get_array_by_index(visitor_T* visitor, AST_T* node)
             }
         }
         printf("\n\033[0;31mruntime error:\033[0m\n    key '%s' does not exist in dictionary\n", index->string_value);
-        exit(1);
+        error_exit(visitor, node);
     }
-    if (index->ast_int >= item->array_size && (item->string_value != (void*) 0 && index->ast_int >= strlen(item->string_value)))
+    if (index->ast_int >= (int)item->array_size && (item->string_value != (void*) 0 && index->ast_int >= (int)strlen(item->string_value)))
     {
         printf("\n\033[0;31mruntime error:\033[0m\n    index was outside bounds of the array\n");
         exit(1);
@@ -631,17 +650,19 @@ AST_T* visitor_visit_get_array_by_index(visitor_T* visitor, AST_T* node)
     }
 
     printf("\n\033[0;31mruntime error:\033[0m\n    can't get value from '%s', invalid index type '%s'.\n",type_name(item->type) , type_name(index->type));
-    exit(1);
+    error_exit(visitor, node);
+
+    return init_ast(AST_NOOP);
 }
 
 /* Visit a function call */
 AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
 {
     if (node->function_call_arguments != (void*) 0 && node->is_private)
-        for (int i = 0; i < node->function_call_arguments_size; i++)
+        for (size_t i = 0; i < node->function_call_arguments_size; i++)
             node->function_call_arguments[i]->private_scope = node->private_scope;
 
-    for (int i = 0; i < node->function_call_arguments_size; i++)
+    for (size_t i = 0; i < node->function_call_arguments_size; i++)
             node->function_call_arguments[i]->scope = node->scope;
 
     AST_T* func = try_run_builtin_function(visitor, node);
@@ -657,16 +678,13 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
     if (fdef == (void*) 0 && fast_compare(node->function_call_name, "main") == 0)
     {
         printf("\n\033[0;31mruntime error:\033[0m\n    expected main method, but got none\n");
-        exit(1);
+        error_exit(visitor, node);
     }
     else if (fdef == (void*) 0)
     {
         printf("\n\033[0;31mruntime error:\033[0m\n    undefined method '%s'\n", node->function_call_name);
-        exit(1);
+        error_exit(visitor, node);
     }
-
-    fdef->scope = init_scope();
-    fdef->function_definition_body->scope = fdef->scope;
 
     if (node->function_call_arguments_size > 0 && fdef->function_definition_args_size > 0)
     {
@@ -699,17 +717,17 @@ AST_T* visitor_visit_statement_call(visitor_T* visitor, AST_T* node)
     if (fast_compare(node->statement_call_type, "include") == 0)
     {
         AST_T* ast = visitor_visit(visitor, node->statement_call_argument);
-        import(visitor, ast->string_value);
+        import(visitor, visitor->scope, ast->string_value);
         return ast;
     }
 
     if (fast_compare(node->statement_call_type, "import") == 0)
     {
         AST_T* ast = visitor_visit(visitor, node->statement_call_argument);
-        char path[255] = "/etc/fusion-lib/";
+        char path[255] = "/etc/beryllium-lib/";
         strcat(path, replace_char(ast->string_value, '.', '/'));
         strcat(path, ".fn");
-        import(visitor, path);
+        import(visitor, visitor->scope, path);
         return ast;
     }
 
@@ -747,7 +765,7 @@ AST_T* visitor_visit_array(visitor_T* visitor, AST_T* node)
     array->array_value[0] = visitor_visit(visitor, node->array_value[0]);
     array->array_size += 1;
 
-    for (int i = 1; i < node->array_size; i++)
+    for (size_t i = 1; i < node->array_size; i++)
     {
         array->array_size += 1;
         array->array_value = realloc(
@@ -845,6 +863,7 @@ AST_T* visitor_visit_variable_setter(visitor_T* visitor, AST_T* node)
             visited_ast, 
             node->variable_setter_variable_name
         );
+        return scope_get_variable_definition(node->scope, node->variable_setter_variable_name);
     }
     else if (scope_get_variable_definition(node->private_scope, node->variable_setter_variable_name) != (void*) 0)
     {
@@ -853,20 +872,23 @@ AST_T* visitor_visit_variable_setter(visitor_T* visitor, AST_T* node)
             visited_ast, 
             node->variable_setter_variable_name
         );
+        return scope_get_variable_definition(node->private_scope, node->variable_setter_variable_name);
     }
     else if (scope_get_variable_definition(visitor->scope, node->variable_setter_variable_name) != (void*) 0)
     {
+
         scope_set_variable_definition(
             visitor->scope, 
             visited_ast, 
             node->variable_setter_variable_name
         );
+        return scope_get_variable_definition(visitor->scope, node->variable_setter_variable_name);
     }
 
     else
     {
         printf("\n\033[0;31mruntime error:\033[0m\n    variable '%s' does not exist\n", node->variable_setter_variable_name);
-        exit(1);
+        error_exit(visitor, node);
     }
     
     ast_free(visited_ast);
@@ -878,7 +900,9 @@ AST_T* visitor_visit_math_expr(visitor_T* visitor, AST_T* node)
 {
     double value = 0;
 
-    node->math_expression[0]->math_expression_value->private_scope = node->private_scope;
+    append_scope(node->math_expression[0]->math_expression_value->scope, node->private_scope);
+    append_scope(node->math_expression[0]->math_expression_value->scope, node->scope);
+
     AST_T* ast_value = visitor_visit(visitor, node->math_expression[0]->math_expression_value);
     
     switch (ast_value->type)
@@ -890,10 +914,11 @@ AST_T* visitor_visit_math_expr(visitor_T* visitor, AST_T* node)
 
     ast_free(ast_value);
 
-    for (int i = 1; i < node->math_expression_size; i++)
+    for (size_t i = 1; i < node->math_expression_size; i++)
     {
-        node->math_expression[i]->math_expression_value->private_scope = node->private_scope;
-        
+        append_scope(node->math_expression[i]->math_expression_value->scope, node->private_scope);
+        append_scope(node->math_expression[i]->math_expression_value->scope, node->scope);
+
         AST_T* ast_value = visitor_visit(visitor, node->math_expression[i]->math_expression_value);
         double value_ = 0;
 
@@ -913,9 +938,9 @@ AST_T* visitor_visit_math_expr(visitor_T* visitor, AST_T* node)
             case '/': value /= value_; break;
             case '*': value *= value_; break;
             case '%': value = (int)value % (int)value_; break;
+            default: break;
         }
     }
-
     if ((int)value == value)
     {
         AST_T* ast = init_ast(AST_INT);
@@ -950,10 +975,10 @@ int visitor_evaluate_boolean(visitor_T* visitor, AST_T* node)
 
 AST_T* visitor_visit_compound(visitor_T* visitor, AST_T* node)
 {
-    for (int i = 0; i < node->compound_size; i++)
+    for (size_t i = 0; i < node->compound_size; i++)
     {
         node->compound_value[i]->is_private = node->is_private;
-        node->compound_value[i]->scope = node->scope; 
+        node->compound_value[i]->scope = node->scope;
         node->compound_value[i]->private_scope = node->private_scope;
 
         AST_T* v = visitor_visit(visitor, node->compound_value[i]);
@@ -964,8 +989,8 @@ AST_T* visitor_visit_compound(visitor_T* visitor, AST_T* node)
         ast_free(v);
     }
 
-    //This part is responsible for calling the main function
-    if (node->is_root_compound)
+    //This part is responsible for calling the main functionk
+    if (node->is_root_compound && visitor->requires_main_method)
     {
         AST_T* function_call = init_ast(AST_FUNCTION_CALL);
         function_call->function_call_name = "main";
