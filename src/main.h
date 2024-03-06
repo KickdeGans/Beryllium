@@ -2,6 +2,7 @@
 #define MAIN_H
 
 void print_help(void);
+void print_version(void);
 
 #define FCARG(sw,flag) \
 	if(fast_compare(argv[i],sw)==0)

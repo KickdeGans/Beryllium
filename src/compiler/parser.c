@@ -3,8 +3,10 @@
 #include "lexer.h"
 #include "../core/scope.h"
 #include "../lib/string.h"
+#include "../runtime/typename.h"
 #include "identifier.h"
 #include "token.h"
+#include "../lib/debug.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -157,58 +159,75 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
 {
     parser->in_field = "parse_expr";
 
-    while (1)
+    while (1)   
     {
         switch (parser->current_token->type)
         {
-            case TOKEN_STRING: parser->prev_ast = parser_parse_string(parser, scope); break;
-            case TOKEN_NUMBER: parser->prev_ast = parser_parse_number(parser, scope); break;
-            case TOKEN_ID: parser->prev_ast = parser_parse_id(parser, scope); break;
-            case TOKEN_EQUALTO: parser->prev_ast = parser_parse_boolean(parser, scope); break;
-            case TOKEN_NOTEQUALTO: parser->prev_ast = parser_parse_boolean(parser, scope); break;
-            case TOKEN_GREATERTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
-            case TOKEN_LESSTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
+            case TOKEN_STRING:       parser->prev_ast = parser_parse_string(parser, scope); break;
+            case TOKEN_NUMBER:       parser->prev_ast = parser_parse_number(parser, scope); break;
+            case TOKEN_ID:           parser->prev_ast = parser_parse_id(parser, scope); break;
+            case TOKEN_LBRACE:       parser->prev_ast = parser_parse_array(parser, scope); break;
+            case TOKEN_LBRACKET:     parser->prev_ast = parser_parse_array_get_by_index(parser, scope); break;
+            case TOKEN_LPAREN:       parser->prev_ast = parser_parse_paren_expr(parser, scope); break;
+            case TOKEN_COLON:        parser->prev_ast = parser_parse_dict_item(parser, scope); break;
+            case TOKEN_DOT:          parser->prev_ast = parser_parse_attribute(parser, scope); break;
+
+            case TOKEN_PLUS:         parser->prev_ast = parser_parse_math_expr(parser, scope); break;
+            case TOKEN_MINUS:        parser->prev_ast = parser_parse_math_expr(parser, scope); break;
+            case TOKEN_SLASH:        parser->prev_ast = parser_parse_math_expr(parser, scope); break;
+            case TOKEN_STAR:         parser->prev_ast = parser_parse_math_expr(parser, scope); break;
+            case TOKEN_PERCENT:      parser->prev_ast = parser_parse_math_expr(parser, scope); break;
+            case TOKEN_EQUALTO:      parser->prev_ast = parser_parse_boolean(parser, scope); break;
+            case TOKEN_NOTEQUALTO:   parser->prev_ast = parser_parse_boolean(parser, scope); break;
+            case TOKEN_GREATERTHAN:  parser->prev_ast = parser_parse_boolean(parser, scope); break;
+            case TOKEN_LESSTHAN:     parser->prev_ast = parser_parse_boolean(parser, scope); break;
             case TOKEN_EGREATERTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
-            case TOKEN_ELESSTHAN: parser->prev_ast = parser_parse_boolean(parser, scope); break;
-            case TOKEN_LBRACE: parser->prev_ast = parser_parse_array(parser, scope); break;
-            case TOKEN_LBRACKET: parser->prev_ast = parser_parse_array_get_by_index(parser, scope); break;
-            case TOKEN_LPAREN: parser->prev_ast = parser_parse_paren_expr(parser, scope); break;
-            case TOKEN_COLON: parser->prev_ast = parser_parse_dict_item(parser, scope); break;
-            case TOKEN_PLUS: parser->prev_ast = parser_parse_math_expr(parser, scope); break;
-            case TOKEN_MINUS: parser->prev_ast = parser_parse_math_expr(parser, scope); break;
-            case TOKEN_SLASH: parser->prev_ast = parser_parse_math_expr(parser, scope); break;
-            case TOKEN_STAR: parser->prev_ast = parser_parse_math_expr(parser, scope); break;
-            case TOKEN_PERCENT: parser->prev_ast = parser_parse_math_expr(parser, scope); break;
-            case TOKEN_DOT: parser->prev_ast = parser_parse_attribute(parser, scope); break;
+            case TOKEN_ELESSTHAN:    parser->prev_ast = parser_parse_boolean(parser, scope); break;
+            
             default: break;
         }
 
-        if (parser->is_single_expression == 1 || parser->current_token->type == TOKEN_RPAREN ||
-               parser->current_token->type == TOKEN_RBRACE ||
-               parser->current_token->type == TOKEN_COMMA ||
-               parser->current_token->type == TOKEN_SEMI)
+        if (parser->is_single_expression == 1 || 
+            parser->current_token->type == TOKEN_RPAREN ||
+            parser->current_token->type == TOKEN_RBRACE ||
+            parser->current_token->type == TOKEN_COMMA ||
+            parser->current_token->type == TOKEN_SEMI)
             break;
      }
 
     parser->is_single_expression = 0;
 
-    return parser->prev_ast;
+    const AST_T* value = parser->prev_ast;
+
+    return value;
 }
 
 AST_T* parser_parse_attribute(parser_T* parser, scope_T* scope)
 {
     parser->in_field = "parse_attribute";
 
-    parser_eat(parser, TOKEN_DOT);
-
     AST_T* ast = init_ast(AST_ATTRIBUTE);
 
-    ast->attribute_source = malloc(sizeof(&parser->prev_ast));
-    memcpy(ast->attribute_source, parser->prev_ast, sizeof(&parser->prev_ast));
+    ast->attribute_source = parser->prev_ast;
 
-    ast->attribute_modifier = parser_parse_expr(parser, scope);
+    while (parser->current_token->type == TOKEN_DOT)
+    {
+        ast->attribute_modifier_size++;
 
-    printf("%s\n", parser->current_token->value);
+        parser_eat(parser, TOKEN_DOT);
+
+        ast->attribute_modifier = realloc(
+            ast->attribute_modifier,
+            ast->attribute_modifier_size * sizeof(struct AST_STRUCT*)
+        );
+        
+        ast->attribute_modifier[ast->attribute_modifier_size-1] = parser_parse_expr(parser, scope);
+    }
+
+    for (size_t i = 0; i < ast->attribute_modifier_size; i++)
+    {
+        printf("type: %s\n", type_name(ast->attribute_modifier[i]->type));
+    }
 
     return ast;
 }
@@ -266,7 +285,9 @@ AST_T* parser_parse_math_expr(parser_T* parser, scope_T* scope)
             default: printf("compilation error:\n   unknown math operator '%s'", parser->current_token->value); exit(1); break;
         }
 
+        parser->is_single_expression = 1;
         math_expr->math_expression[math_expr->math_expression_size-1]->math_expression_value = parser_parse_expr(parser, scope);
+        parser->is_single_expression = 0;
     }
     
     math_expr->scope = scope;
@@ -380,9 +401,9 @@ AST_T* parser_parse_variable_definition(parser_T* parser, scope_T* scope)
 /* Parse a function definition */
 /* Example: */
 /* 
-fn hello() 
+fun hello() 
 {
-    println("Hello world!");
+    puts("Hello world!\n");
 }
 */
 AST_T* parser_parse_function_definition(parser_T* parser, scope_T* scope)
@@ -643,7 +664,6 @@ AST_T* parser_parse_string(parser_T* parser, scope_T* scope)
 
     parser_eat(parser, TOKEN_STRING);
 
-    ast_string->scope = scope;
     return ast_string;
 }
 
@@ -836,9 +856,9 @@ AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
 {
     parser->in_field = "parse_id";
 
-    if (fast_compare(parser->current_token->value, "var") == 0 ||
-        fast_compare(parser->current_token->value, "val") == 0 ||
-        fast_compare(parser->current_token->value, "global") == 0)
+    if (     fast_compare(parser->current_token->value, "var") == 0 ||
+             fast_compare(parser->current_token->value, "val") == 0 ||
+             fast_compare(parser->current_token->value, "global") == 0)
         return parser_parse_variable_definition(parser, scope);
 
     else if (fast_compare(parser->current_token->value, "fun") == 0)
@@ -847,9 +867,6 @@ AST_T* parser_parse_id(parser_T* parser, scope_T* scope)
     else if (fast_compare(parser->current_token->value, "if") == 0 ||
              fast_compare(parser->current_token->value, "else") == 0 ||
              fast_compare(parser->current_token->value, "while") == 0 ||
-             fast_compare(parser->current_token->value, "until") == 0 ||
-             fast_compare(parser->current_token->value, "dowhile") == 0 ||
-             fast_compare(parser->current_token->value, "dountil") == 0 ||
              fast_compare(parser->current_token->value, "for") == 0 ||
              fast_compare(parser->current_token->value, "foreach") == 0)
         return parser_parse_statement_definition(parser, scope);

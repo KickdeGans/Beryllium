@@ -1,5 +1,6 @@
 #include "AST.h"
 #include "scope.h"
+#include <string.h>
 
 /* Initiate Abstract Syntax Tree */
 AST_T* init_ast(int type)
@@ -14,6 +15,7 @@ AST_T* init_ast(int type)
     ast->continue_ = 0;
     ast->is_private = 0;
     ast->is_root_compound = 0;
+    ast->uid = rand();
 
     /*  AST_VARIABLE_DEFINITION */
     ast->variable_definition_variable_name = (void*) 0;
@@ -105,6 +107,7 @@ AST_T* init_ast(int type)
     /* AST_ATTRIBUTE */
     ast->attribute_source = (void*) 0;
     ast->attribute_modifier = (void*) 0;
+    ast->attribute_modifier_size = 0;
 
     /* AST_STREAM */
     ast->stream = (void*) 0;

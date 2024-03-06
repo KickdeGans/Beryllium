@@ -1,6 +1,7 @@
 #ifndef AST_H
 #define AST_H
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -50,6 +51,7 @@ typedef struct AST_STRUCT
     int continue_;
     int is_private;
     int is_root_compound;
+    uint_fast32_t uid;
 
     /* AST_VARIABLE_DEFINITION */
     char* variable_definition_variable_name;
@@ -145,7 +147,8 @@ typedef struct AST_STRUCT
 
     /* AST_ATTRIBUTE */
     struct AST_STRUCT* attribute_source;
-    struct AST_STRUCT* attribute_modifier;
+    struct AST_STRUCT** attribute_modifier;
+    size_t attribute_modifier_size;
 
     /* AST_STREAM */
     FILE* stream;

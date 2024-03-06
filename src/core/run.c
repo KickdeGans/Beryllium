@@ -15,6 +15,7 @@ void set_rand(void)
 
     gettimeofday(&time, NULL);
     srand(((size_t)(time.tv_sec) * 1000) + (time.tv_usec / 1000));
+    rand();
 
     return;
 }

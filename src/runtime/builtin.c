@@ -70,10 +70,33 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
     {
         AST_T* ast = init_ast(AST_STRING);
 
+        for (size_t i = 0; i < args_size; i++)
+        {
+            AST_T* visited_ast = visitor_visit(visitor, args[i]);
+            switch (visited_ast->type)
+            {
+                case AST_STRING: printf("%s", visited_ast->string_value); break;
+                case AST_INT: printf("%i", visited_ast->ast_int); break;
+                case AST_DOUBLE: printf("%f", visited_ast->ast_double); break;
+                case AST_BOOLEAN:
+                    switch (visited_ast->boolean_value)
+                    {
+                        case 1: printf("true"); break;
+                        case 0: printf("false"); break;
+                    }
+                    break;
+                default: break;
+            }
+        }
+
         char value[2048];
         fgets(value, sizeof(value), stdin);
 
-        ast->string_value = value;
+        ast->string_value = malloc(2048);
+        strcpy(ast->string_value, value);
+
+        ast->string_value[strlen(ast->string_value)-1] = '\0';
+
         return ast;
     }
     if (fast_compare(node->function_call_name, "sleep") == 0)
@@ -244,6 +267,39 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         import(visitor, node->private_scope, path);
         return init_ast(AST_NOOP);
     }
+    if (fast_compare(node->function_call_name, "int") == 0)
+    {
+        AST_T* ast = visitor_visit(visitor, args[0]);
+
+        AST_T* _int_ = init_ast(AST_INT);
+        _int_->ast_int = atoi(ast->string_value);
+
+        return _int_;
+    }
+    if (fast_compare(node->function_call_name, "string") == 0)
+    {
+        AST_T* _string_ = init_ast(AST_INT);
+        _string_->string_value = malloc(32);
+        
+        AST_T* visited_ast = visitor_visit(visitor, args[0]);
+        switch (visited_ast->type)
+        {
+            case AST_STRING: sprintf(_string_->string_value,"%s", visited_ast->string_value); break;
+            case AST_INT: sprintf(_string_->string_value,"%i", visited_ast->ast_int); break;
+            case AST_DOUBLE: sprintf(_string_->string_value, "%f", visited_ast->ast_double); break;
+            case AST_BOOLEAN:
+                switch (visited_ast->boolean_value)
+                {
+                    case 1: sprintf(_string_->string_value, "true"); break;
+                    case 0: sprintf(_string_->string_value, "false"); break;
+                }
+                break;
+            default: break;
+        }
+
+        return _string_;
+    }
+
 
     return (void*) 0;
 }

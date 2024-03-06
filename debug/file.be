@@ -1,4 +1,4 @@
 fun main()
 {
-	puts("Hello world!".size());
+	puts("a".concat("b").concat("c"));
 }

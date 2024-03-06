@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# X86/64
+x86_64-linux-gnu-gcc -lm -O3 src/*.c src/core/*.c src/lib/*.c src/runtime/*.c src/compiler/*.c -o bin/beryllium-x86_64

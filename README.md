@@ -1,6 +1,14 @@
 <img src="Beryllium-Logo.svg" width="256"></img>
 # beryllium
-## Version 0.45
+## Version 0.45<br>
+
+Example:
+```beryllium
+fun main()
+{
+    puts("Hello world!\n");
+}
+```
 
 ### Quick Install:
 ```shell
@@ -36,12 +44,17 @@ make clang
 make install
 ```
 
+#### OR:
+You could copy the correct pre-compiled binary to /bin if processing power is limited or no compiler is present.<br><br>
+For example, you could copy ```berylium-x86_64``` (located in the ```bin``` folder) to /bin or just execute it as-is to run the interpreter.<br>
+(More architectures will be available in the future)<br>
+
 ### Debugging:
 Change directory to the debug folder.
 Then, make and then run ```./debug``` to debug beryllium.
 Make sure the script has permissions to be executed
 #### Requirements:
-```
+```Text
 Linux
 gdb
 gcc

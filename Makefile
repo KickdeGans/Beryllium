@@ -3,14 +3,14 @@ core_name = beryllium
 core_install_location = /bin/beryllium
 core_libraries_folder = /etc/beryllium-lib
 core_libraries_name = libraries
+compile_flags = -O3 -lm
 
 make:
-	gcc -O3 -lm $(core_files) -o $(core_name)
+	gcc $(compile_flags) $(core_files) -o $(core_name)
 
 clang:
-	clang -O3 $(core_files) -o $(core_name)
+	clang $(compile_flags) $(core_files) -o $(core_name)
 
 install:
 	cp $(core_name) $(core_install_location)
-	sudo rm -rf $(core_libraries_folder)
 	cp -r $(core_libraries_name) $(core_libraries_folder)

@@ -37,7 +37,10 @@ AST_T* visitor_visit(visitor_T* visitor, AST_T* node)
 {
     //Begin safety checks
     if (!ast_sanity_check(node))
-        return init_ast(AST_NOOP);
+    {
+        printf("memblock error:\n   corrupt ast node\n");
+        exit(2);
+    }
 
     if (visitor == (void*) 0)
         visitor = init_visitor();
@@ -88,255 +91,288 @@ AST_T* visitor_visit(visitor_T* visitor, AST_T* node)
 AST_T* visitor_visit_attribute(visitor_T* visitor, AST_T* node)
 {
     if (!node->attribute_source)
-        return init_ast(AST_NOOP);
+    {
+        printf("\n\033[0;31mruntime error:\033[0m\n    cannot read properties of 'null'\n");
+        error_exit(visitor, node);
+    }
 
     append_scope(node->attribute_source->scope, node->scope);
     append_scope(node->attribute_source->scope, node->private_scope);
  
     AST_T* value = visitor_visit(visitor, node->attribute_source);
-    
-    if (node->attribute_modifier->type == AST_FUNCTION_CALL)
+
+    for (size_t index = 0; index <= node->attribute_modifier_size; index++)
     {
-        AST_T** args = node->attribute_modifier->function_call_arguments;
-        size_t args_size = node->attribute_modifier->function_call_arguments_size;
-        
-        if (fast_compare(node->attribute_modifier->function_call_name, "toString") == 0)
+        printf("%li\n%i\n", index, node->attribute_modifier[index]->type);
+        if (node->attribute_modifier[index]->type == AST_FUNCTION_CALL)
         {
-            AST_T* string = init_ast(AST_STRING);
+            AST_T** args = node->attribute_modifier[index]->function_call_arguments;
+            size_t args_size = node->attribute_modifier[index]->function_call_arguments_size;
 
-            switch (value->type)
+            if (fast_compare(node->attribute_modifier[index]->function_call_name, "toString") == 0)
             {
-                case AST_INT: sprintf(string->string_value, "%i", value->ast_int); break;
-                case AST_STRING: string->string_value = value->string_value; break;
-                default: break;
-            }
-            
-            return string;
-        }
+                AST_T* string = init_ast(AST_STRING);
 
-        if (fast_compare(node->attribute_modifier->function_call_name, "read") == 0)
-        {
-            AST_T* string = init_ast(AST_STRING);
-
-            char* buffer = 0;
-            size_t length;
-
-            if (value->stream)
-            {
-                fseek(value->stream, 0, SEEK_END);
-                length = ftell(value->stream);
-                fseek(value->stream, 0, SEEK_SET);
-
-                buffer = calloc(length + 1, length);
-
-                if (buffer)
+                switch (value->type)
                 {
-                    fread(buffer, 1, length, value->stream);
-                    string->string_value = buffer;
+                    case AST_INT: sprintf(string->string_value, "%i", value->ast_int); break;
+                    case AST_STRING: string->string_value = value->string_value; break;
+                    case AST_BOOLEAN: string->string_value = value->boolean_value ? "true" : "false";
+                    default: break;
                 }
+
+                value = string;
+                continue;
             }
-            else
+
+            if (fast_compare(node->attribute_modifier[index]->function_call_name, "size") == 0)
             {
-                printf("\n\033[0;31mruntime error:\033[0m\n    streamError: cannot read stream that is not of type 'stream'.\n");
-                error_exit(visitor, value);
-            }
+                AST_T* int_ = init_ast(AST_INT);
 
-            return string;
-        }
-        if (fast_compare(node->attribute_modifier->function_call_name, "write") == 0)
-        {
-            if (args_size != 1)
-            {
-                printf("\n\033[0;31mruntime error:\033[0m\n    function 'write()' takes 1 argument\n");
-                error_exit(visitor, node);
-            }
-            if (!value->stream)
-            {
-                printf("\n\033[0;31mruntime error:\033[0m\n    cannot write to null\n");
-                error_exit(visitor, node);
-            }
-            AST_T* visited_ast = visitor_visit(visitor, args[0]);
-            
-            fprintf(value->stream, "%s", visited_ast->string_value);
-
-            return init_ast(AST_NOOP);
-        }
-        if (fast_compare(node->attribute_modifier->function_call_name, "concat") == 0)
-        {
-            if (args_size != 1)
-            {
-                printf("\n\033[0;31mruntime error:\033[0m\n    function 'concat()' takes 1 argument\n");
-                error_exit(visitor, node);
-            }
-
-            AST_T* visited_ast = visitor_visit(visitor, args[0]);
-            AST_T* string = init_ast(AST_STRING);
-
-            if (!visited_ast->string_value) 
-                visited_ast->string_value = "";
-            if (!value->string_value)
-                value->string_value = "";
-
-            string->string_value = malloc(strlen(visited_ast->string_value) + strlen(value->string_value));
-
-            sprintf(string->string_value, "%s%s", value->string_value, visited_ast->string_value);
-
-            return string;
-        }
-        if (fast_compare(node->attribute_modifier->function_call_name, "trim") == 0)
-        {
-            AST_T* string = init_ast(AST_STRING);
-
-            while ((*value->string_value) == ' ' )
-                 value->string_value++;
-
-            char* c = value->string_value;
-            while (*c) {
-                 c ++;
-            }
-            c--;
-
-            // trim suffix
-            while ((*c) == ' ' ) {
-                *c = '\0';
-                c--;
-            }
-
-            string->string_value = value->string_value;
-
-            return string;
-        }
-        if (fast_compare(node->attribute_modifier->function_call_name, "replace") == 0)
-        {
-            AST_T* string = init_ast(AST_STRING);
-
-            char* oldW = visitor_visit(visitor, args[0])->string_value;
-            char* newW = visitor_visit(visitor, args[1])->string_value;
-            char* s = malloc(sizeof(value->string_value));
-            strcpy(s, value->string_value);
-
-            char* result;
-            int i, cnt = 0;
-            int newWlen = strlen(newW);
-            int oldWlen = strlen(oldW);
-
-            // Counting the number of times old word
-            // occur in the string
-            for (i = 0; s[i] != '\0'; i++) {
-                if (strstr(&s[i], oldW) == &s[i]) {
-                    cnt++;
-
-                    // Jumping to index after the old word.
-                    i += oldWlen - 1;
+                switch (value->type)
+                {
+                    case AST_STRING: int_->ast_int = strlen(value->string_value);
+                    case AST_ARRAY: int_->ast_int = sizeof(value->array_value);
+                    case AST_INT: int_->ast_int = value->ast_int;
+                    case AST_STREAM: int_->ast_int = sizeof(&value->stream);
+                    case AST_BOOLEAN: int_->ast_int = value->boolean_value;
+                    case AST_COMPOUND: int_->ast_int = value->compound_size;
+                    default: int_->ast_int = 0;
                 }
+
+                value = int_;
+                continue;
             }
 
-            // Making new string of enough length
-            result = (char*)malloc(i + cnt * (newWlen - oldWlen) + 1);
 
-            i = 0;
-            while (*s) {
-                // compare the substring with the result
-                if (strstr(s, oldW) == s) {
-                    strcpy(&result[i], newW);
-                    i += newWlen;
-                    s += oldWlen;
+            if (fast_compare(node->attribute_modifier[index]->function_call_name, "read") == 0)
+            {
+                AST_T* string = init_ast(AST_STRING);
+
+                char* buffer = 0;
+                size_t length;
+
+                if (value->stream)
+                {
+                    fseek(value->stream, 0, SEEK_END);
+                    length = ftell(value->stream);
+                    fseek(value->stream, 0, SEEK_SET);
+
+                    buffer = calloc(length + 1, length);
+
+                    if (buffer)
+                    {
+                        fread(buffer, 1, length, value->stream);
+                        string->string_value = buffer;
+                    }
                 }
                 else
-                    result[i++] = *s++;
+                {
+                    printf("\n\033[0;31mruntime error:\033[0m\n    streamError: cannot read stream that is not of type 'stream'.\n");
+                    error_exit(visitor, value);
+                }
+
+                value = string;
+                continue;
             }
-
-            result[i] = '\0';
-
-            string->string_value = malloc(sizeof(result));
-            strcpy(string->string_value, result);
-            free(result);
-
-            return string;
-        }
-        if (fast_compare(node->attribute_modifier->function_call_name, "append") == 0)
-        {
-            if (args_size != 1)
+            if (fast_compare(node->attribute_modifier[index]->function_call_name, "write") == 0)
             {
-                printf("\n\033[0;31mruntime error:\033[0m\n    function 'append()' takes 1 argument\n");
-                error_exit(visitor, node);
+                if (args_size != 1)
+                {
+                    printf("\n\033[0;31mruntime error:\033[0m\n    function 'write()' takes 1 argument\n");
+                    error_exit(visitor, node);
+                }
+                if (!value->stream)
+                {
+                    printf("\n\033[0;31mruntime error:\033[0m\n    cannot write to null\n");
+                    error_exit(visitor, node);
+                }
+                AST_T* visited_ast = visitor_visit(visitor, args[0]);
+
+                fprintf(value->stream, "%s", visited_ast->string_value);
+
+                continue;
             }
-
-            AST_T* array = init_ast(AST_ARRAY);
-            array->array_value = value->array_value;
-            array->array_size = value->array_size;
-
-            AST_T* item = visitor_visit(visitor, args[0]);
-
-            append_array(array->array_value, item, &array->array_size);
-
-            return array;
-        }
-        if (fast_compare(node->attribute_modifier->function_call_name, "contains") == 0)
-        {
-            if (args_size != 1)
+            if (fast_compare(node->attribute_modifier[index]->function_call_name, "concat") == 0)
             {
-                printf("\n\033[0;31mruntime error:\033[0m\n    function 'contains()' takes 1 argument\n");
-                error_exit(visitor, node);
+                if (args_size != 1)
+                {
+                    printf("\n\033[0;31mruntime error:\033[0m\n    function 'concat()' takes 1 argument\n");
+                    error_exit(visitor, node);
+                }
+
+                AST_T* visited_ast = visitor_visit(visitor, args[0]);
+                AST_T* string = init_ast(AST_STRING);
+
+                if (!visited_ast->string_value) 
+                    visited_ast->string_value = "\0";
+                if (!value->string_value)
+                    value->string_value = "\0";
+
+                string->string_value = malloc(strlen(visited_ast->string_value) + strlen(value->string_value) + 1);
+
+                strcat(string->string_value, value->string_value);
+                strcat(string->string_value, visited_ast->string_value);
+
+                ast_free(visited_ast);
+                value = string;
+                continue;
             }
-
-            AST_T* item = visitor_visit(visitor, args[0]);
-            AST_T* result = init_ast(AST_BOOLEAN);
-
-            if (value->type != AST_STRING || item->type != AST_STRING)
+            if (fast_compare(node->attribute_modifier[index]->function_call_name, "trim") == 0)
             {
-                printf("\n\033[0;31mruntime error:\033[0m\n    contains: cannot compare values of two different types.\n");
-                error_exit(visitor, value);
+                AST_T* string = init_ast(AST_STRING);
+
+                while ((*value->string_value) == ' ' )
+                     value->string_value++;
+
+                char* c = value->string_value;
+                while (*c) {
+                     c ++;
+                }
+                c--;
+
+                // trim suffix
+                while ((*c) == ' ' ) {
+                    *c = '\0';
+                    c--;
+                }
+
+                string->string_value = value->string_value;
+
+                value = string;
+                continue;
             }
-
-            result->boolean_value = strstr(value->string_value, item->string_value) != NULL;
-
-            return result;
-        }
-        if (fast_compare(node->attribute_modifier->function_call_name, "split") == 0)
-        {
-            if (args_size != 1)
+            if (fast_compare(node->attribute_modifier[index]->function_call_name, "replace") == 0)
             {
-                printf("\n\033[0;31mruntime error:\033[0m\n    function 'split()' takes 1 argument\n");
-                error_exit(visitor, node);
-            }
+                AST_T* string = init_ast(AST_STRING);
 
-            AST_T* item = visitor_visit(visitor, args[0]);
-            if (item->type != AST_STRING)
+                char* oldW = visitor_visit(visitor, args[0])->string_value;
+                char* newW = visitor_visit(visitor, args[1])->string_value;
+                char* s = malloc(sizeof(value->string_value));
+                strcpy(s, value->string_value);
+
+                char* result;
+                int i, cnt = 0;
+                int newWlen = strlen(newW);
+                int oldWlen = strlen(oldW);
+
+                // Counting the number of times old word
+                // occur in the string
+                for (i = 0; s[i] != '\0'; i++) {
+                    if (strstr(&s[i], oldW) == &s[i]) {
+                        cnt++;
+
+                        // Jumping to index after the old word.
+                        i += oldWlen - 1;
+                    }
+                }
+
+                // Making new string of enough length
+                result = (char*)malloc(i + cnt * (newWlen - oldWlen) + 1);
+
+                i = 0;
+                while (*s) {
+                    // compare the substring with the result
+                    if (strstr(s, oldW) == s) {
+                        strcpy(&result[i], newW);
+                        i += newWlen;
+                        s += oldWlen;
+                    }
+                    else
+                        result[i++] = *s++;
+                }
+
+                result[i] = '\0';
+
+                string->string_value = malloc(sizeof(result));
+                strcpy(string->string_value, result);
+                free(result);
+
+                value = string;
+                continue;
+            }
+            if (fast_compare(node->attribute_modifier[index]->function_call_name, "append") == 0)
             {
-                printf("\n\033[0;31mruntime error:\033[0m\n    cannot split with null\n");
-                error_exit(visitor, node);
+                if (args_size != 1)
+                {
+                    printf("\n\033[0;31mruntime error:\033[0m\n    function 'append()' takes 1 argument\n");
+                    error_exit(visitor, node);
+                }
+
+                AST_T* array = init_ast(AST_ARRAY);
+                array->array_value = value->array_value;
+                array->array_size = value->array_size;
+
+                AST_T* item = visitor_visit(visitor, args[0]);
+
+                append_array(array->array_value, item, &array->array_size);
+
+                value = array;
             }
-            if (value->type != AST_STRING)
+            if (fast_compare(node->attribute_modifier[index]->function_call_name, "contains") == 0)
             {
-                printf("\n\033[0;31mruntime error:\033[0m\n    cannot split null\n");
-                error_exit(visitor, node);
+                if (args_size != 1)
+                {
+                    printf("\n\033[0;31mruntime error:\033[0m\n    function 'contains()' takes 1 argument\n");
+                    error_exit(visitor, node);
+                }
+
+                AST_T* item = visitor_visit(visitor, args[0]);
+                AST_T* result = init_ast(AST_BOOLEAN);
+
+                if (value->type != AST_STRING || item->type != AST_STRING)
+                {
+                    printf("\n\033[0;31mruntime error:\033[0m\n    contains: cannot compare values of two different types.\n");
+                    error_exit(visitor, value);
+                }
+
+                result->boolean_value = strstr(value->string_value, item->string_value) != NULL;
+
+                value = result;
+                continue;
             }
-
-            char * token = strtok(value->string_value, item->string_value);
-            AST_T* result = init_ast(AST_STRING);
-
-            while (token != NULL) 
+            if (fast_compare(node->attribute_modifier[index]->function_call_name, "split") == 0)
             {
-                AST_T* str = init_ast(AST_STRING);
+                if (args_size != 1)
+                {
+                    printf("\n\033[0;31mruntime error:\033[0m\n    function 'split()' takes 1 argument\n");
+                    error_exit(visitor, node);
+                }
 
-                str->string_value = malloc(strlen(token));
+                AST_T* item = visitor_visit(visitor, args[0]);
+                if (item->type != AST_STRING)
+                {
+                    printf("\n\033[0;31mruntime error:\033[0m\n    cannot split with null\n");
+                    error_exit(visitor, node);
+                }
+                if (value->type != AST_STRING)
+                {
+                    printf("\n\033[0;31mruntime error:\033[0m\n    cannot split null\n");
+                    error_exit(visitor, node);
+                }
 
-                strcpy(str->string_value, token);
-                append_array(result->array_value, str, &result->array_size);
+                char * token = strtok(value->string_value, item->string_value);
+                AST_T* result = init_ast(AST_STRING);
 
-                token = strtok(NULL, item->string_value);
+                while (token != NULL) 
+                {
+                    AST_T* str = init_ast(AST_STRING);
+
+                    str->string_value = malloc(strlen(token));
+
+                    strcpy(str->string_value, token);
+                    append_array(result->array_value, str, &result->array_size);
+
+                    token = strtok(NULL, item->string_value);
+                }
+
+                value = result;
+                continue;
             }
-            
-            return result;
         }
     }
-    if (node->attribute_modifier->type == AST_ATTRIBUTE)
-    {
-        return visitor_visit_attribute(visitor, node);
-    }
 
-    return init_ast(AST_NOOP);
+    return value;
 }
 
 /* Visit variable definition */
@@ -662,14 +698,13 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
         for (size_t i = 0; i < node->function_call_arguments_size; i++)
             node->function_call_arguments[i]->private_scope = node->private_scope;
 
-    for (size_t i = 0; i < node->function_call_arguments_size; i++)
-            node->function_call_arguments[i]->scope = node->scope;
+    //for (size_t i = 0; i < node->function_call_arguments_size; i++)
+    //        node->function_call_arguments[i]->scope = node->scope;
 
     AST_T* func = try_run_builtin_function(visitor, node);
 
     if (func != (void*) 0)
         return func;
-
     AST_T* fdef = scope_get_function_definition(
         visitor->scope,
         node->function_call_name
@@ -685,7 +720,6 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
         printf("\n\033[0;31mruntime error:\033[0m\n    undefined method '%s'\n", node->function_call_name);
         error_exit(visitor, node);
     }
-
     if (node->function_call_arguments_size > 0 && fdef->function_definition_args_size > 0)
     {
         for (int i = 0; i < (int) node->function_call_arguments_size; i++)
@@ -693,9 +727,12 @@ AST_T* visitor_visit_function_call(visitor_T* visitor, AST_T* node)
             AST_T* ast_var = (AST_T*) fdef->function_definition_args[i];
             AST_T* ast_value = (AST_T*) node->function_call_arguments[i];
             AST_T* ast_vardef = init_ast(AST_VARIABLE_DEFINITION);
+
             ast_vardef->variable_definition_value = visitor_visit(visitor, ast_value);
             ast_vardef->variable_definition_variable_name = (char*) calloc(strlen(ast_var->variable_name) + 1, sizeof(char));
+
             strcpy(ast_vardef->variable_definition_variable_name, ast_var->variable_name);
+
             scope_add_variable_definition(fdef->function_definition_body->scope, ast_vardef);
         }
     }
@@ -726,7 +763,7 @@ AST_T* visitor_visit_statement_call(visitor_T* visitor, AST_T* node)
         AST_T* ast = visitor_visit(visitor, node->statement_call_argument);
         char path[255] = "/etc/beryllium-lib/";
         strcat(path, replace_char(ast->string_value, '.', '/'));
-        strcat(path, ".fn");
+        strcat(path, ".be");
         import(visitor, visitor->scope, path);
         return ast;
     }
@@ -926,7 +963,7 @@ AST_T* visitor_visit_math_expr(visitor_T* visitor, AST_T* node)
         {
             case AST_INT: value_ = ast_value->ast_int; break;
             case AST_DOUBLE: value_ = ast_value->ast_double; break;
-            default: printf("\n\033[0;31mruntime error:\033[0m\n    can't interpret type %i as number", ast_value->type); exit(1);
+            default: printf("\n\033[0;31mruntime error:\033[0m\n    can't interpret type %s as number\n", type_name(ast_value->type)); exit(1);
         }
         
         ast_free(ast_value);

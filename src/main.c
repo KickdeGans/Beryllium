@@ -14,12 +14,45 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define VERSION "0.4"
+#define VERSION "0.46"
 
 void print_help(void)
 {
-    printf("Usage: beryllium <options> <file>\n--version:\n    Print version.\n--help:\n    Open help menu.\n");
+    printf("Usage: beryllium <options> <file>\n--version:\n    Print version.\n--help:\n    Open help menu.\n--mkexec:\n    Make executable like file.\n--debug-mode:\n    Run in debug mode.\n");
     return;
+}
+
+void print_version(void)
+{
+#if defined(__clang__)
+            #if defined(__gnu_linux__)
+                printf("beryllium runtime %s [clang] on Linux\n", VERSION);
+                return;
+            #endif
+            #if defined(__unix)
+                printf("beryllium runtime %s [clang] on Unix\n", VERSION);
+                return;
+            #endif
+            #if defined(_WIN32)
+                printf("beryllium runtime %s [clang] on Windows\n", VERSION);
+                return;
+            #endif
+        #elif defined(__GNUC__) || defined(__GNUG__)
+            #if defined(__linux)
+                printf("beryllium runtime %s [gcc] on Linux\n", VERSION);
+                return;
+            #endif
+            #if defined(__unix)
+                printf("beryllium runtime %s [gcc] on Unix\n", VERSION);
+                return;
+            #endif
+            #if defined(_WIN32)
+                printf("beryllium runtime %s [gcc] on Windows\n", VERSION);
+                return;
+            #endif
+        #elif defined(_MSC_VER)
+        printf("beryllium runtime %s [Microsoft C] on Windows\n", VERSION);
+        #endif
 }
 
 /* Main function */
@@ -27,6 +60,7 @@ int main(int argc, char* argv[])
 {
     if (argc == 1)
     {
+        print_version();
         printf("No arguments or file given.\nType 'beryllium --help' to open the help menu.\n");
         exit(0);
     }
@@ -36,6 +70,7 @@ int main(int argc, char* argv[])
     int   __run             = 0;
     int   __help            = 0;
     int   __debug_mode      = 0;
+    int   __make_program    = 0;
     int   file_location_pos = 1;
     char* compile_file      = 0;
 
@@ -46,40 +81,25 @@ int main(int argc, char* argv[])
         FCARG("--run",__run)  FCARG_ACTION(__run);
         FCARG("--help",__help) __help = 1;
         FCARG("--debug-mode",__debug_mode) __debug_mode = 1;
+        FCARG("--mkexec",__debug_mode) FCARG_ACTION(__make_program);
     }
     if (__version)
     {
-        #if defined(__clang__)
-            #if defined(__gnu_linux__)
-                printf("beryllium runtime %s [clang] on Linux\n", VERSION);
-                goto endver;
-            #endif
-            #if defined(__unix)
-                printf("beryllium runtime %s [clang] on Unix\n", VERSION);
-                goto endver;
-            #endif
-            #if defined(_WIN32)
-                printf("beryllium runtime %s [clang] on Windows\n", VERSION);
-                goto endver;
-            #endif
-        #elif defined(__GNUC__) || defined(__GNUG__)
-            #if defined(__linux)
-                printf("beryllium runtime %s [gcc] on Linux\n", VERSION);
-                goto endver;
-            #endif
-            #if defined(__unix)
-                printf("beryllium runtime %s [gcc] on Unix\n", VERSION);
-                goto endver;
-            #endif
-            #if defined(_WIN32)
-                printf("beryllium runtime %s [gcc] on Windows\n", VERSION);
-                goto endver;
-            #endif
-        #elif defined(_MSC_VER)
-        printf("beryllium runtime %s [Microsoft C] on Windows\n", VERSION);
-        #endif
+        print_version();
     }
-    endver:
+    if (__make_program)
+    {
+        char* file_contents = io_file_read(compile_file);
+
+        FILE* f = fopen("main", "w");
+
+        fprintf(f, "#!/usr/bin/beryllium\n\n%s", file_contents);
+
+        int close = fclose(f);
+        close += system("chmod +x ./main");
+
+        return close;
+    }
     if (__compile)
     {
         char* file_contents = io_file_read(compile_file);
