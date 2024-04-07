@@ -32,6 +32,7 @@ typedef struct AST_STRUCT
         AST_MATH_EXPR,
         AST_ATTRIBUTE,
         AST_STREAM,
+        AST_INLINE_MATH_EXPR,
         AST_NOOP /* KEEP AST_NOOP AT END OF ENUM */
     } type;
 
@@ -152,6 +153,10 @@ typedef struct AST_STRUCT
 
     /* AST_STREAM */
     FILE* stream;
+
+    /* AST_INLINE_MATH_EXPR */
+    char inline_math_expr_operator;
+    struct AST_STRUCT* inline_math_expr_value;
 
 } AST_T;
 

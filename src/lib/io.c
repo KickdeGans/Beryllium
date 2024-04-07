@@ -25,7 +25,7 @@ char* io_file_read(const char* filepath)
         return buffer;
     }
 
-    printf("error reading file <%s>\n", filepath);
+    printf("error reading file [%s]\n", filepath);
     exit(2);
 }
 

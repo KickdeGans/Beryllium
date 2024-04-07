@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <unistd.h>
 
 void AST_analysis(AST_T* ast)
 {
@@ -49,7 +50,7 @@ void AST_analysis(AST_T* ast)
     
     printf("####### END AST ANALYSIS #######\n");
 
-    printf("process exited with code 1\n");
+    printf("\nProcess %i exited with code 1.\n", getpid());
     exit(1);
 }
 void error_exit(visitor_T* visitor, AST_T* ast)

@@ -161,6 +161,41 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
 
     while (1)   
     {
+        if (parser->is_single_expression)
+        {
+            parser->is_single_expression = 0;
+
+            switch (parser->current_token->type)
+            {
+                case TOKEN_STRING:       return parser_parse_string(parser, scope); break;
+                case TOKEN_NUMBER:       return parser_parse_number(parser, scope); break;
+                case TOKEN_ID:           return parser_parse_id(parser, scope); break;
+                case TOKEN_LBRACE:       return parser_parse_array(parser, scope); break;
+                case TOKEN_LBRACKET:     return parser_parse_array_get_by_index(parser, scope); break;
+                case TOKEN_LPAREN:       return parser_parse_paren_expr(parser, scope); break;
+                case TOKEN_COLON:        return parser_parse_dict_item(parser, scope); break;
+                case TOKEN_DOT:          return parser_parse_attribute(parser, scope); break;
+
+                case TOKEN_PLUS:         return parser_parse_math_expr(parser, scope); break;
+                case TOKEN_MINUS:        return parser_parse_math_expr(parser, scope); break;
+                case TOKEN_SLASH:        return parser_parse_math_expr(parser, scope); break;
+                case TOKEN_STAR:         return parser_parse_math_expr(parser, scope); break;
+                case TOKEN_PERCENT:      return parser_parse_math_expr(parser, scope); break;
+                case TOKEN_PLUSEQUALS:   return parser_parse_inline_math_expr(parser, scope);
+                case TOKEN_MINUSEQUALS:  return parser_parse_inline_math_expr(parser, scope);
+                case TOKEN_STAREQUALS:   return parser_parse_inline_math_expr(parser, scope);
+                case TOKEN_DIVEQUALS:    return parser_parse_inline_math_expr(parser, scope);
+                case TOKEN_EQUALTO:      return parser_parse_boolean(parser, scope); break;
+                case TOKEN_NOTEQUALTO:   return parser_parse_boolean(parser, scope); break;
+                case TOKEN_GREATERTHAN:  return parser_parse_boolean(parser, scope); break;
+                case TOKEN_LESSTHAN:     return parser_parse_boolean(parser, scope); break;
+                case TOKEN_EGREATERTHAN: return parser_parse_boolean(parser, scope); break;
+                case TOKEN_ELESSTHAN:    return parser_parse_boolean(parser, scope); break;
+
+                default: break;
+            }
+        }
+
         switch (parser->current_token->type)
         {
             case TOKEN_STRING:       parser->prev_ast = parser_parse_string(parser, scope); break;
@@ -191,13 +226,20 @@ AST_T* parser_parse_expr(parser_T* parser, scope_T* scope)
             parser->current_token->type == TOKEN_RPAREN ||
             parser->current_token->type == TOKEN_RBRACE ||
             parser->current_token->type == TOKEN_COMMA ||
-            parser->current_token->type == TOKEN_SEMI)
+            parser->current_token->type == TOKEN_SEMI /*||
+            parser->current_token->type == TOKEN_EQUALTO ||
+            parser->current_token->type == TOKEN_NOTEQUALTO ||
+            parser->current_token->type == TOKEN_GREATERTHAN ||
+            parser->current_token->type == TOKEN_LESSTHAN ||
+            parser->current_token->type == TOKEN_EGREATERTHAN ||
+            parser->current_token->type == TOKEN_ELESSTHAN*/)
             break;
      }
 
     parser->is_single_expression = 0;
 
-    const AST_T* value = parser->prev_ast;
+    AST_T* value = init_ast(AST_NOOP);
+    *value = *parser->prev_ast;
 
     return value;
 }
@@ -221,12 +263,8 @@ AST_T* parser_parse_attribute(parser_T* parser, scope_T* scope)
             ast->attribute_modifier_size * sizeof(struct AST_STRUCT*)
         );
         
+        parser->is_single_expression = 1;
         ast->attribute_modifier[ast->attribute_modifier_size-1] = parser_parse_expr(parser, scope);
-    }
-
-    for (size_t i = 0; i < ast->attribute_modifier_size; i++)
-    {
-        printf("type: %s\n", type_name(ast->attribute_modifier[i]->type));
     }
 
     return ast;
@@ -287,11 +325,35 @@ AST_T* parser_parse_math_expr(parser_T* parser, scope_T* scope)
 
         parser->is_single_expression = 1;
         math_expr->math_expression[math_expr->math_expression_size-1]->math_expression_value = parser_parse_expr(parser, scope);
-        parser->is_single_expression = 0;
     }
     
     math_expr->scope = scope;
     return math_expr;
+}
+
+
+AST_T* parser_parse_inline_math_expr(parser_T* parser, scope_T* scope)
+{
+    parser->in_field = "parse_inline_math_expr";
+
+    AST_T* ast = init_ast(AST_INLINE_MATH_EXPR);
+
+    ast->variable_name = parser->prev_token->value;
+
+    switch (parser->current_token->type)
+    {
+        case TOKEN_PLUSEQUALS: ast->inline_math_expr_operator = '+'; parser_eat(parser, TOKEN_PLUSEQUALS);
+        case TOKEN_MINUSEQUALS: ast->inline_math_expr_operator = '-'; parser_eat(parser, TOKEN_MINUSEQUALS);
+        case TOKEN_DIVEQUALS: ast->inline_math_expr_operator = '/'; parser_eat(parser, TOKEN_DIVEQUALS);
+        case TOKEN_STAREQUALS: ast->inline_math_expr_operator = '*'; parser_eat(parser, TOKEN_STAREQUALS);
+        
+        default: return init_ast(AST_NOOP);
+    }
+
+    parser->is_single_expression = 1;
+    ast->inline_math_expr_value = parser_parse_expr(parser, scope);
+
+    return ast;
 }
 
 /* Parse a function call */
@@ -556,6 +618,13 @@ AST_T* parser_parse_variable(parser_T* parser, scope_T* scope)
         parser_eat(parser, TOKEN_RBRACE);
         return ast;
     }
+    if (parser->current_token->type == TOKEN_PLUSEQUALS ||
+        parser->current_token->type == TOKEN_MINUSEQUALS ||
+        parser->current_token->type == TOKEN_DIVEQUALS ||
+        parser->current_token->type == TOKEN_STAREQUALS)
+    {
+        return parser_parse_inline_math_expr(parser, scope);
+    }
 
     if (fast_compare(token_value, "int") == 0)
     {
@@ -736,8 +805,10 @@ AST_T* parser_parse_boolean(parser_T* parser, scope_T* scope)
         default: printf("\ncompilation error:\n    invalid boolean operator '%s' at line %d\n", parser->current_token->value, parser->lexer->current_line); exit(1);
     }
     
+    parser->is_single_expression = 1;
     ast_boolean->boolean_variable_b = parser_parse_expr(parser, scope);
     ast_boolean->scope = scope;
+    parser->is_single_expression = 0;
 
     return ast_boolean;
 }
@@ -800,7 +871,7 @@ AST_T* parser_parse_foreach(parser_T* parser, scope_T* scope)
     ast_foreach->foreach_variable_name = parser->current_token->value;
 
     parser_eat(parser, TOKEN_ID);
-    parser_eat(parser, TOKEN_POINT);
+    parser_eat(parser, TOKEN_IN);
 
     ast_foreach->foreach_source = parser_parse_expr(parser, scope);
     ast_foreach->foreach_source->scope = scope;

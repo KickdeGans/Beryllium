@@ -36,6 +36,8 @@ AST_T* parser_parse_paren_expr(parser_T* parser, scope_T* scope);
 
 AST_T* parser_parse_math_expr(parser_T* parser, scope_T* scope);
 
+AST_T* parser_parse_inline_math_expr(parser_T* parser, scope_T* scope);
+
 AST_T* parser_parse_function_call(parser_T* parser, scope_T* scope);
 
 AST_T* parser_parse_statement_call(parser_T* parser, scope_T* scope);

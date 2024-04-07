@@ -1,0 +1,4 @@
+fun main()
+{
+	puts("Hello world!");
+}

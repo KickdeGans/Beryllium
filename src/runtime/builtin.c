@@ -37,7 +37,11 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
                     break;
                 default: break;
             }
+            //ast_free(visited_ast);
         }
+
+        //free(args);
+
         return init_ast(AST_NOOP);
     }
     
@@ -50,7 +54,14 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         }
 
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
-        exit(visited_ast->ast_int);
+        if (visitor->debug_mode)
+            printf("\nProcess %i exitted with code %i.\n", getpid(), visited_ast->ast_int);
+
+        int code = visited_ast->ast_int;
+        //ast_free(visited_ast);
+        //free(args);
+
+        exit(code);
     }
 
     if (fast_compare(node->function_call_name, "system") == 0)
@@ -63,6 +74,8 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
         AST_T* ast = init_ast(AST_INT);
         ast->ast_int = system(visited_ast->string_value);
+        //ast_free(visited_ast);
+        //free(args);
         return ast;
     }
 
@@ -87,6 +100,8 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
                     break;
                 default: break;
             }
+            
+            //ast_free(visited_ast);
         }
 
         char value[2048];
@@ -109,6 +124,9 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         AST_T* visited_ast = visitor_visit(visitor, args[0]);
         usleep(visited_ast->ast_double * 1000);
         usleep(visited_ast->ast_int * 1000);
+
+        //free(args);
+
         return visited_ast;
     }
     if (fast_compare(node->function_call_name, "typeof") == 0)
@@ -131,6 +149,10 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
             case AST_BOOLEAN: res->ast_int = 0x32003; break;
             default: res->ast_int = -2; break;
         }
+
+        //ast_free(inp);
+        free(args);
+
         return res;
     }
     if (fast_compare(node->function_call_name, "open") == 0)
@@ -144,6 +166,8 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
 
         ast->stream = fopen(visitor_visit(visitor, args[0])->string_value, visitor_visit(visitor, args[1])->string_value);
 
+        //free(args);
+
         return ast;
     }
     if (fast_compare(node->function_call_name, "close") == 0)
@@ -156,6 +180,8 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         FILE* stream = visitor_visit(visitor, args[0])->stream;
 
         fclose(stream);
+
+        //free(args);
 
         return init_ast(AST_NOOP);
     }
@@ -179,6 +205,10 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
             AST_T* ast = init_ast(AST_STRING);
             ast->string_value = string;
 
+            //ast_free(stream);
+            //ast_free(value);
+            //free(args);
+
             return ast;
         }
         if (stream->type == AST_ARRAY)
@@ -186,11 +216,18 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
             AST_T* array = stream;
 
             append_array(array->array_value, value, &stream->array_size);
+            
+            //ast_free(stream);
+            //ast_free(value);
+            //free(args);
 
             return array; 
         }
 
         fprintf(stream->stream, "%s", value->string_value);
+
+        //ast_free(value);
+        //free(args);
 
         return stream;
     }
@@ -218,6 +255,9 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
             ast->string_value[strlen(ast->string_value)] = '\0';
             ast->string_value[strlen(ast->string_value) - 1] = '\0';
 
+            //free(stream);
+            //free(args);
+
             return ast;
         }
 
@@ -238,6 +278,9 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
             AST_T* ast = init_ast(AST_STRING);
             ast->string_value = buffer;
 
+            //free(stream);
+            //free(args);
+
             return ast;
         }
 
@@ -248,6 +291,9 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         char* file = visitor_visit(visitor, args[0])->string_value;
         AST_T* res = init_ast(AST_INT);
         res->ast_int = remove(file);
+
+        //free(args);
+
         return res;
     }
     if (fast_compare(node->function_call_name, "rand") == 0)
@@ -256,6 +302,8 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
 
         ast->ast_int = rand();
         
+        //free(args);
+
         return ast;
     }
     if (fast_compare(node->function_call_name, "local_import") == 0)
@@ -263,8 +311,11 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
         char* file = visitor_visit(visitor, args[0])->string_value;
         char path[255] = "/etc/beryllium-lib/";
         strcat(path, replace_char(file, '.', '/'));
-        strcat(path, ".fn");
+        strcat(path, ".ber");
         import(visitor, node->private_scope, path);
+
+        //free(args);
+
         return init_ast(AST_NOOP);
     }
     if (fast_compare(node->function_call_name, "int") == 0)
@@ -273,6 +324,9 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
 
         AST_T* _int_ = init_ast(AST_INT);
         _int_->ast_int = atoi(ast->string_value);
+
+        //ast_free(ast);
+        //free(args);
 
         return _int_;
     }
@@ -296,6 +350,9 @@ AST_T* try_run_builtin_function(visitor_T* visitor, AST_T* node)
                 break;
             default: break;
         }
+
+        //ast_free(visited_ast);
+        //free(args);
 
         return _string_;
     }

@@ -13,18 +13,22 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
+#include <unistd.h>
 
-#define VERSION "0.46"
+#define VERSION "0.5"
 
 void print_help(void)
 {
-    printf("Usage: beryllium <options> <file>\n--version:\n    Print version.\n--help:\n    Open help menu.\n--mkexec:\n    Make executable like file.\n--debug-mode:\n    Run in debug mode.\n");
+    printf("Usage: beryllium <options> <file>\nInterpreter for the Beryllium programming language.\n\n--version:\n    Print version.\n--help:\n    Open help menu.\n--mkexec:\n    Make executable like file.\n    Usage: beryllium --mkexec [FILE]\n   The resulting file is called 'a.out', make sure you have backed up any files called 'a.out'.\n--debug-mode:\n    Run in debug mode.\n   This will result in a dump of the faulty AST (abstract syntax tree), which contains useful information for debugging.\n");
+    printf("\nGitHub page: https://github.com/KickdeGans/Beryllium\n");
+    printf("Documentation: https://github.com/KickdeGans/Beryllium/wiki\n");
+    printf("Submit issues at: https://github.com/KickdeGans/Beryllium/issues\n");
     return;
 }
 
 void print_version(void)
 {
-#if defined(__clang__)
+        #if defined(__clang__)
             #if defined(__gnu_linux__)
                 printf("beryllium runtime %s [clang] on Linux\n", VERSION);
                 return;
@@ -61,8 +65,8 @@ int main(int argc, char* argv[])
     if (argc == 1)
     {
         print_version();
-        printf("No arguments or file given.\nType 'beryllium --help' to open the help menu.\n");
-        exit(0);
+        printf("No arguments or file given.\n\nType 'beryllium --help' to open the help menu.\n");
+        exit(1);
     }
     
     int   __version         = 0;
@@ -154,7 +158,7 @@ int main(int argc, char* argv[])
         strcat(path, argv[i]);
         strcat(path, " ");
 
-        if (fast_compare(last_four,".be") == 0 || i + 1 == argc)
+        if (fast_compare(last_four,".ber") == 0 || i + 1 == argc)
         {
             if (__debug_mode)
                 printf("###### RUNNING IN DEBUG MODE ######\n\n");
@@ -165,6 +169,9 @@ int main(int argc, char* argv[])
                 run_file(path, argv, __debug_mode);
             else
                 run_file(path, calloc(1, sizeof(char*)), __debug_mode);
+
+            if (__debug_mode)
+                printf("\nProcess %i exited with code 0.\n", getpid());
         }
     }
 

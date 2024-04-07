@@ -56,6 +56,8 @@ AST_T* visitor_visit_dict_item(visitor_T* visitor, AST_T* node);
 
 AST_T* visitor_visit_math_expr(visitor_T* visitor, AST_T* node);
 
+AST_T* visitor_visit_inline_math_expr(visitor_T* visitor, AST_T* node);
+
 int visitor_evaluate_boolean(visitor_T* visitor, AST_T* node);
 
 #endif

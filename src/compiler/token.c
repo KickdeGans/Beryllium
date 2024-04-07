@@ -43,6 +43,7 @@ char* token_get_token_name_from_type(int type)
         case TOKEN_OR: return "||";
         case TOKEN_NUMBER: return "number value";
         case TOKEN_COLON: return ":";
+        case TOKEN_IN: return "in";
         case TOKEN_END: return "end";
     }
     return "";

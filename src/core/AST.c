@@ -112,6 +112,10 @@ AST_T* init_ast(int type)
     /* AST_STREAM */
     ast->stream = (void*) 0;
 
+    /* AST_INLINE_MATH_EXPR */
+    ast->inline_math_expr_operator = 0;
+    ast->inline_math_expr_value = (void*) 0;
+
     return ast;
 }
 

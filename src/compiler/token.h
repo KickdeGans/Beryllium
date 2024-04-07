@@ -38,7 +38,12 @@ typedef struct TOKEN_STRUCT
         TOKEN_POINT,
         TOKEN_DOUBLE_PLUS,
         TOKEN_DOUBLE_MINUS,
-        TOKEN_END
+        TOKEN_IN,
+        TOKEN_END,
+        TOKEN_PLUSEQUALS,
+        TOKEN_MINUSEQUALS,
+        TOKEN_STAREQUALS,
+        TOKEN_DIVEQUALS
     } type;
 
     char* value;

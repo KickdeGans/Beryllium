@@ -1,1 +1,4 @@
-Add precompiled binaries folder (only for x86_x64 for now, you would need to compile a binary for another architecture for other systems if that would be needed)
+Version 0.5
+
+Change file extension to avoid conflict in (hopefully) future linguist additions: .be -> .ber
+Finally fixed attributes not working when there are more than 1 sub expressions
