@@ -1,4 +1,4 @@
-<img src="Beryllium-Logo.png" width="256"></img>
+<img src="Beryllium-Logo.svg" width="256"></img>
 # beryllium
 ## Version 0.5<br>
 
