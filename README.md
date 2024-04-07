@@ -1,6 +1,6 @@
 <img src="Beryllium-Logo.png" width="256"></img>
 # beryllium
-## Version 0.45<br>
+## Version 0.5<br>
 
 Example:
 ```beryllium
